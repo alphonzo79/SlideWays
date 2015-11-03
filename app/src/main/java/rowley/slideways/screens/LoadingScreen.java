@@ -1,8 +1,8 @@
 package rowley.slideways.screens;
 
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.util.Log;
 
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.screen_control.ScreenController;
@@ -12,7 +12,6 @@ import rowley.slideways.util.FrameRateTracker;
 import rowley.wordtrie.WordTrie;
 import rx.Observable;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -24,15 +23,14 @@ public class LoadingScreen extends ScreenController {
     private final String TAG = "LoadingScreen";
 
     private float percentComplete = 0f;
-    private int maxWidth = 200;
-    private int barHeight = 30;
-    private int screenWidth = 480;
-    private int screenHeight = 320;
-    private int centerWidth = 240;
-    private int centerHeight = 160;
+    private int maxBarWidth;
+    private int barHeight;
+    private int centerWidth;
+    private int centerHeight;
     private int barLeft;
     private int barTop;
-    private final int SECONDS_TO_LOAD = 5;
+    private final int LOADING_TEXT_SIZE = 40;
+    private final int SECONDS_TO_LOOP = 5;
     private FrameRateTracker frameRateTracker;
 
     private volatile boolean loadComplete = false;
@@ -40,8 +38,15 @@ public class LoadingScreen extends ScreenController {
     public LoadingScreen(GameController gameController) {
         super(gameController);
 
-        barLeft = centerWidth - (maxWidth / 2);
-        barTop = centerHeight - 15;
+        int screenWidth = gameController.getGraphics().getWidth();
+        int screenHeight = gameController.getGraphics().getHeight();
+        maxBarWidth = screenWidth / 2;
+        barHeight = (int)(maxBarWidth * .1);
+        centerWidth = screenWidth / 2;
+        centerHeight = screenHeight / 2;
+
+        barLeft = centerWidth - (maxBarWidth / 2);
+        barTop = centerHeight - (barHeight / 2);
 
         frameRateTracker = new FrameRateTracker();
 
@@ -69,7 +74,7 @@ public class LoadingScreen extends ScreenController {
 
     @Override
     public void update(float portionOfSecond) {
-        float progress = portionOfSecond / SECONDS_TO_LOAD;
+        float progress = portionOfSecond / SECONDS_TO_LOOP;
         if(percentComplete < 1) {
             percentComplete += progress;
         }
@@ -82,11 +87,11 @@ public class LoadingScreen extends ScreenController {
     @Override
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.BLUE);
-        gameController.getGraphics().drawRect(barLeft, barTop, (int) (maxWidth * percentComplete), barHeight, Color.GREEN);
-        gameController.getGraphics().writeText(gameController.getStringResource(R.string.loading), centerWidth, centerHeight + barHeight, Color.WHITE, 40f, Typeface.SANS_SERIF);
-        gameController.getGraphics().writeText(String.valueOf(frameRateTracker.getFrameRate()) + " fps", 100, 25, Color.WHITE, 10f, Typeface.SANS_SERIF);
+        gameController.getGraphics().drawRect(barLeft, barTop, (int) (maxBarWidth * percentComplete), barHeight, Color.GREEN);
+        gameController.getGraphics().writeText(gameController.getStringResource(R.string.loading), centerWidth, centerHeight + barHeight, Color.WHITE, LOADING_TEXT_SIZE, Typeface.SANS_SERIF, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(String.valueOf(frameRateTracker.getFrameRate()) + " fps", 50, 50, Color.WHITE, 12, Typeface.SANS_SERIF, Paint.Align.LEFT);
         if(loadComplete) {
-            gameController.getGraphics().writeText(Assets.wordTrie.getWordCount() + " words loaded", centerWidth, centerHeight + barHeight + 45, Color.WHITE, 25f, Typeface.DEFAULT_BOLD);
+            gameController.getGraphics().writeText(Assets.wordTrie.getWordCount() + " words loaded", centerWidth, (int)(centerHeight + barHeight + (LOADING_TEXT_SIZE * gameController.getGraphics().getScale())), Color.WHITE, 25, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
         }
     }
 
