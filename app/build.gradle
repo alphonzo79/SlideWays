@@ -1,3 +1,6 @@
+def Properties props = new Properties();
+def propFile = file(new File('SigningConfigs.properties'))
+
 apply plugin: 'com.android.application'
 
 repositories {
@@ -20,17 +23,26 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("../../Keystores/joe_rowley_personal.keystore")
-            storePassword System.getenv("KSTOREPWD")
-            keyAlias "joe.rowley"
-            keyPassword System.getenv("KEYPWD")
+            if(propFile.canRead()) {
+                props.load(new FileInputStream(propFile))
+
+                storeFile file("../../Keystores/joe_rowley_personal.keystore")
+                storePassword props['keystore_password']
+                keyAlias props['release_key_alias']
+                keyPassword props['release_key_password']
+            }
         }
 
         debug {
-            storeFile file("../../Keystores/joe_rowley_personal.keystore")
-            storePassword System.getenv("KSTOREPWD")
-            keyAlias "joe_debug"
-            keyPassword System.getenv("KEYPWD")
+            println("Debug, Yo")
+            if(propFile.canRead()) {
+                props.load(new FileInputStream(propFile))
+
+                storeFile file("../../Keystores/joe_rowley_personal.keystore")
+                storePassword props['keystore_password']
+                keyAlias props['debug_key_alias']
+                keyPassword props['debug_key_password']
+            }
         }
     }
 
