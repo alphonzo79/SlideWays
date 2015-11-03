@@ -23,10 +23,11 @@ android {
 
     signingConfigs {
         release {
+            storeFile file("../../Keystores/joe_rowley_personal.keystore")
+
             if(propFile.canRead()) {
                 props.load(new FileInputStream(propFile))
 
-                storeFile file("../../Keystores/joe_rowley_personal.keystore")
                 storePassword props['keystore_password']
                 keyAlias props['release_key_alias']
                 keyPassword props['release_key_password']
@@ -34,11 +35,11 @@ android {
         }
 
         debug {
-            println("Debug, Yo")
+            storeFile file("../../Keystores/joe_rowley_personal.keystore")
+
             if(propFile.canRead()) {
                 props.load(new FileInputStream(propFile))
 
-                storeFile file("../../Keystores/joe_rowley_personal.keystore")
                 storePassword props['keystore_password']
                 keyAlias props['debug_key_alias']
                 keyPassword props['debug_key_password']
@@ -76,4 +77,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile 'com.android.support:support-v4:21.0.3'
+    compile 'io.reactivex:rxandroid:1.0.1'
+    compile 'io.reactivex:rxjava:1.0.14'
 }
