@@ -12,6 +12,7 @@ import rowley.slideways.util.FrameRateTracker;
 import rowley.wordtrie.WordTrie;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
@@ -33,6 +34,7 @@ public class LoadingScreen extends ScreenController {
     private final int SECONDS_TO_LOOP = 5;
     private FrameRateTracker frameRateTracker;
 
+    private Subscription subscription;
     private volatile boolean loadComplete = false;
 
     public LoadingScreen(GameController gameController) {
@@ -50,7 +52,7 @@ public class LoadingScreen extends ScreenController {
 
         frameRateTracker = new FrameRateTracker();
 
-        Observable.create(new Observable.OnSubscribe<Void>() {
+        subscription = Observable.create(new Observable.OnSubscribe<Void>() {
             @Override
             public void call(Subscriber<? super Void> subscriber) {
                 Assets.wordTrie = new WordTrie.WordTrieBuilder().addSowpodWords(Assets.MAX_WORD_LENGTH).addEnableWords(Assets.MAX_WORD_LENGTH).build();
@@ -92,6 +94,7 @@ public class LoadingScreen extends ScreenController {
         gameController.getGraphics().writeText(String.valueOf(frameRateTracker.getFrameRate()) + " fps", 50, 50, Color.WHITE, 12, Typeface.SANS_SERIF, Paint.Align.LEFT);
         if(loadComplete) {
             gameController.getGraphics().writeText(Assets.wordTrie.getWordCount() + " words loaded", centerWidth, (int)(centerHeight + barHeight + (LOADING_TEXT_SIZE * gameController.getGraphics().getScale())), Color.WHITE, 25, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+            gameController.setScreen(new HomeScreen(gameController));
         }
     }
 
@@ -107,6 +110,8 @@ public class LoadingScreen extends ScreenController {
 
     @Override
     public void dispose() {
-
+        if(subscription != null) {
+            subscription.unsubscribe();
+        }
     }
 }

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="build_best_games_table">CREATE TABLE IF NOT EXISTS best_games (_id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT, score INTEGER, timestamp INTEGER);</string>
+</resources>
