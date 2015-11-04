@@ -2,7 +2,16 @@ def Properties props = new Properties();
 def propFile = file(new File('SigningConfigs.properties'))
 
 apply plugin: 'com.android.application'
+apply plugin: 'com.neenbedankt.android-apt'
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.4'
+    }
+}
 repositories {
     flatDir {
         dirs 'libs'
@@ -80,4 +89,7 @@ dependencies {
     compile 'com.android.support:support-v4:21.0.3'
     compile 'io.reactivex:rxandroid:1.0.1'
     compile 'io.reactivex:rxjava:1.0.14'
+    apt 'com.google.dagger:dagger-compiler:2.0'
+    compile 'com.google.dagger:dagger:2.0'
+    provided 'javax.annotation:jsr250-api:1.0'
 }

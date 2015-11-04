@@ -1,5 +1,9 @@
 package rowley.slideways.screens;
 
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 
@@ -18,7 +22,8 @@ public class HomeScreen extends ScreenController {
 
     @Override
     public void present(float v) {
-
+        gameController.getGraphics().clear(Color.GREEN);
+        gameController.getGraphics().writeText("You Home, Brah!", 120, 120, 40, Color.RED, Typeface.SERIF, Paint.Align.LEFT);
     }
 
     @Override

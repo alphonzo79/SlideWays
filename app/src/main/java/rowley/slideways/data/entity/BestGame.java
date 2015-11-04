@@ -104,4 +104,14 @@ public class BestGame implements Comparable {
 
         return hashCode;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        if(username != null) {
+            builder.append(username);
+        }
+        builder.append(" scored ").append(score).append(" at ").append(timestamp);
+        return builder.toString();
+    }
 }

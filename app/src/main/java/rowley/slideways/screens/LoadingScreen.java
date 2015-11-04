@@ -4,9 +4,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 
-import jrowley.gamecontrollib.game_control.GameController;
+import javax.inject.Inject;
+
+import jrowley.gamecontrollib.game_control.BaseGameControllerActivity;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 import rowley.slideways.R;
+import rowley.slideways.SlideWaysApp;
+import rowley.slideways.data.dao.IBestGamesDao;
 import rowley.slideways.util.Assets;
 import rowley.slideways.util.FrameRateTracker;
 import rowley.wordtrie.WordTrie;
@@ -37,7 +41,10 @@ public class LoadingScreen extends ScreenController {
     private Subscription subscription;
     private volatile boolean loadComplete = false;
 
-    public LoadingScreen(GameController gameController) {
+    @Inject
+    IBestGamesDao bestGameDao;
+
+    public LoadingScreen(BaseGameControllerActivity gameController) {
         super(gameController);
 
         int screenWidth = gameController.getGraphics().getWidth();
@@ -51,6 +58,8 @@ public class LoadingScreen extends ScreenController {
         barTop = centerHeight - (barHeight / 2);
 
         frameRateTracker = new FrameRateTracker();
+
+        ((SlideWaysApp)gameController.getApplication()).applicationComponent().inject(this);
 
         subscription = Observable.create(new Observable.OnSubscribe<Void>() {
             @Override

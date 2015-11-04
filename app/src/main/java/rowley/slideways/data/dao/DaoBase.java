@@ -13,12 +13,10 @@ import rowley.slideways.R;
  * Created by jrowley on 11/3/15.
  */
 public class DaoBase extends SQLiteOpenHelper {
-    private static final String DB_NAME = "SlideWaysData";
-    private static final int VERSION = 1;
     private final Context slidewaysContext;
 
-    public DaoBase(Context context) {
-        super(context, DB_NAME, null, VERSION);
+    public DaoBase(Context context, IDatabaseConfig config) {
+        super(context, config.getDatabaseName(), null, config.getDatabaseVersion());
         slidewaysContext = context;
     }
 
