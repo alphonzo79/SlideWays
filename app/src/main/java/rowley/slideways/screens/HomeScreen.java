@@ -99,15 +99,15 @@ public class HomeScreen extends ScreenController {
                 if (event.getType() == TouchEvent.TOUCH_UP) {
                     if (event.getY() > newButtonTop && event.getY() < newButtonTop + buttonHeight - 1) {
                         isNewPressed = false;
-                        //todo launch new game
+                        gameController.setScreen(new GameScreen(gameController));
                     }
                     if (event.getY() > continueButtonTop && event.getY() < continueButtonTop + buttonHeight - 1) {
                         isContinuePressed = false;
-                        //todo launch continue game
+                        gameController.setScreen(new GameScreen(gameController));
                     }
                     if (event.getY() > highScoresButtonTop && event.getY() < highScoresButtonTop + buttonHeight - 1) {
                         isHighScoresPressed = false;
-                        //todo launch High scores
+                        gameController.setScreen(new HighScoresScreen(gameController));
                     }
                 }
 
