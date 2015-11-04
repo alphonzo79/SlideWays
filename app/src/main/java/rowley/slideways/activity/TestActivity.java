@@ -1,6 +1,7 @@
 package rowley.slideways.activity;
 
 import android.app.Activity;
+import android.util.Log;
 
 import javax.inject.Inject;
 
@@ -18,5 +19,9 @@ public class TestActivity extends Activity {
     public void setUpTestInjection(SlideWaysInjectionModule testModule) {
         ((SlideWaysApp)getApplication()).overrideInjectionModule(testModule);
         ((SlideWaysApp)getApplication()).applicationComponent().inject(this);
+    }
+
+    public IBestGamesDao getBestGamesDao() {
+        return bestGamesDao;
     }
 }

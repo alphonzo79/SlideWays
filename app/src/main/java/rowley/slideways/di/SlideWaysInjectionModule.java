@@ -24,7 +24,6 @@ public class SlideWaysInjectionModule {
     }
 
     @Provides
-    @Singleton
     IDatabaseConfig provideDatabaseconfig() {
         return new ReleaseDatabaseConfig();
     }

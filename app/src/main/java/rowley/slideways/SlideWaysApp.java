@@ -1,6 +1,7 @@
 package rowley.slideways;
 
 import android.app.Application;
+import android.util.Log;
 
 import javax.inject.Singleton;
 

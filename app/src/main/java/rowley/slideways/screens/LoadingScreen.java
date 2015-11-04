@@ -65,6 +65,7 @@ public class LoadingScreen extends ScreenController {
             @Override
             public void call(Subscriber<? super Void> subscriber) {
                 Assets.wordTrie = new WordTrie.WordTrieBuilder().addSowpodWords(Assets.MAX_WORD_LENGTH).addEnableWords(Assets.MAX_WORD_LENGTH).build();
+                Assets.bestGameList = bestGameDao.getBestGamesDecendingOrder(Assets.MAX_BEST_GAMES);
                 subscriber.onCompleted();
             }
         }).subscribeOn(Schedulers.newThread()).observeOn(Schedulers.immediate()).subscribe(new Action1<Void>() {

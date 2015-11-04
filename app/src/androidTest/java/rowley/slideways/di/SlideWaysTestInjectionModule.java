@@ -1,5 +1,7 @@
 package rowley.slideways.di;
 
+import android.content.Context;
+
 import javax.inject.Singleton;
 
 import dagger.Provides;
@@ -12,13 +14,12 @@ import rowley.slideways.data.dao.TestDatabaseConfig;
  * Created by jrowley on 11/4/15.
  */
 public class SlideWaysTestInjectionModule extends SlideWaysInjectionModule {
-    public SlideWaysTestInjectionModule(SlideWaysApp app) {
-        super(app);
+    public SlideWaysTestInjectionModule(Context context) {
+        super(context);
     }
 
     @Override
     @Provides
-    @Singleton
     IDatabaseConfig provideDatabaseconfig() {
         return new TestDatabaseConfig();
     }
