@@ -94,6 +94,9 @@ public class LoadingScreen extends ScreenController {
             percentComplete = 0;
         }
         gameController.getFrameRateTracker().update(portionOfSecond);
+
+        //Clear out the touch events
+        gameController.getInput().getTouchEvents();
     }
 
     @Override

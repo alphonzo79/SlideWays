@@ -4,7 +4,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 
+import java.util.List;
+
 import jrowley.gamecontrollib.game_control.GameController;
+import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 import rowley.slideways.R;
 import rowley.slideways.util.Assets;
@@ -65,9 +68,15 @@ public class HomeScreen extends ScreenController {
         buttonsLeft = centerWidth - (buttonWidth / 2);
         buttonTextSize = (int) (buttonHeight * TEXT_SIZE_TO_BUTTON_RATIO);
 
-        continueButtonTop = centerHeight - (buttonHeight / 2);
-        newButtonTop = continueButtonTop - heightBetweenButtons - buttonHeight;
-        highScoresButtonTop = centerHeight + (buttonHeight / 2) + heightBetweenButtons;
+        if(isGameInProgress) {
+            continueButtonTop = centerHeight - (buttonHeight / 2);
+            newButtonTop = continueButtonTop - heightBetweenButtons - buttonHeight;
+            highScoresButtonTop = centerHeight + (buttonHeight / 2) + heightBetweenButtons;
+        } else {
+            newButtonTop = centerHeight - heightBetweenButtons - buttonHeight;
+            highScoresButtonTop = centerHeight + heightBetweenButtons;
+            continueButtonTop = screenHeight + buttonHeight;
+        }
 
         newGameString = gameController.getStringResource(R.string.new_game);
         continueGameString = gameController.getStringResource(R.string.continue_game);
@@ -82,7 +91,50 @@ public class HomeScreen extends ScreenController {
     @Override
     public void update(float portionOfSecond) {
         gameController.getFrameRateTracker().update(portionOfSecond);
-        // get touches, etc. But for now we're just going to show a static screen
+
+        List<TouchEvent> touchEvents = gameController.getInput().getTouchEvents();
+
+        for(TouchEvent event : touchEvents) {
+            if(event.getX() > buttonsLeft && event.getX() < buttonsLeft + buttonWidth - 1) {
+                if (event.getType() == TouchEvent.TOUCH_UP) {
+                    if (event.getY() > newButtonTop && event.getY() < newButtonTop + buttonHeight - 1) {
+                        isNewPressed = false;
+                        //todo launch new game
+                    }
+                    if (event.getY() > continueButtonTop && event.getY() < continueButtonTop + buttonHeight - 1) {
+                        isContinuePressed = false;
+                        //todo launch continue game
+                    }
+                    if (event.getY() > highScoresButtonTop && event.getY() < highScoresButtonTop + buttonHeight - 1) {
+                        isHighScoresPressed = false;
+                        //todo launch High scores
+                    }
+                }
+
+                if (event.getType() == TouchEvent.TOUCH_DOWN || event.getType() == TouchEvent.TOUCH_DRAGGED) {
+                    if (event.getY() > newButtonTop && event.getY() < newButtonTop + buttonHeight - 1) {
+                        isNewPressed = true;
+                    } else if(isNewPressed) {
+                        isNewPressed = false;
+                    }
+                    if (event.getY() > continueButtonTop && event.getY() < continueButtonTop + buttonHeight - 1) {
+                        isContinuePressed = true;
+                    } else if(isContinuePressed) {
+                        isContinuePressed = false;
+                    }
+                    if (event.getY() > highScoresButtonTop && event.getY() < highScoresButtonTop + buttonHeight - 1) {
+                        isHighScoresPressed = true;
+                    } else if(isHighScoresPressed) {
+                        isHighScoresPressed = false;
+                    }
+                }
+            } else {
+                //reset buttons
+                isNewPressed = false;
+                isContinuePressed = false;
+                isHighScoresPressed = false;
+            }
+        }
     }
 
     @Override
@@ -96,9 +148,9 @@ public class HomeScreen extends ScreenController {
         buttonColor = isHighScoresPressed ? BUTTON_COLOR_PRESSED : BUTTON_COLOR_STANDARD;
         gameController.getGraphics().drawRect(buttonsLeft, highScoresButtonTop, buttonWidth, buttonHeight, buttonColor);
 
-        gameController.getGraphics().writeText(newGameString, centerWidth, newGameTextTop, Color.GREEN, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(continueGameString, centerWidth, continueGameTextTop, Color.GREEN, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(highScoresString, centerWidth, highScoreTextTop, Color.GREEN, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(newGameString, centerWidth, newGameTextTop, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(continueGameString, centerWidth, continueGameTextTop, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(highScoresString, centerWidth, highScoreTextTop, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
 
         gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
     }
