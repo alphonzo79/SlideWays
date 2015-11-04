@@ -2,4 +2,7 @@
     <string name="app_name">SlideWays</string>
 
     <string name="loading">Loading&#8230;</string>
+    <string name="new_game">New Game</string>
+    <string name="continue_game">Continue</string>
+    <string name="high_scores">High Scores</string>
 </resources>

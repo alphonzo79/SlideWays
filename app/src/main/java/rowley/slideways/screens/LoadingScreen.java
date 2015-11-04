@@ -12,7 +12,6 @@ import rowley.slideways.R;
 import rowley.slideways.SlideWaysApp;
 import rowley.slideways.data.dao.IBestGamesDao;
 import rowley.slideways.util.Assets;
-import rowley.slideways.util.FrameRateTracker;
 import rowley.wordtrie.WordTrie;
 import rx.Observable;
 import rx.Subscriber;
@@ -36,7 +35,8 @@ public class LoadingScreen extends ScreenController {
     private int barTop;
     private final int LOADING_TEXT_SIZE = 40;
     private final int SECONDS_TO_LOOP = 5;
-    private FrameRateTracker frameRateTracker;
+
+    private String loading;
 
     private Subscription subscription;
     private volatile boolean loadComplete = false;
@@ -57,7 +57,7 @@ public class LoadingScreen extends ScreenController {
         barLeft = centerWidth - (maxBarWidth / 2);
         barTop = centerHeight - (barHeight / 2);
 
-        frameRateTracker = new FrameRateTracker();
+        loading = gameController.getStringResource(R.string.loading);
 
         ((SlideWaysApp)gameController.getApplication()).applicationComponent().inject(this);
 
@@ -93,15 +93,15 @@ public class LoadingScreen extends ScreenController {
         if (percentComplete > 1) {
             percentComplete = 0;
         }
-        frameRateTracker.update(portionOfSecond);
+        gameController.getFrameRateTracker().update(portionOfSecond);
     }
 
     @Override
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.BLUE);
         gameController.getGraphics().drawRect(barLeft, barTop, (int) (maxBarWidth * percentComplete), barHeight, Color.GREEN);
-        gameController.getGraphics().writeText(gameController.getStringResource(R.string.loading), centerWidth, centerHeight + barHeight, Color.WHITE, LOADING_TEXT_SIZE, Typeface.SANS_SERIF, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(String.valueOf(frameRateTracker.getFrameRate()) + " fps", 50, 50, Color.WHITE, 12, Typeface.SANS_SERIF, Paint.Align.LEFT);
+        gameController.getGraphics().writeText(loading, centerWidth, centerHeight + barHeight, Color.WHITE, LOADING_TEXT_SIZE, Typeface.SANS_SERIF, Paint.Align.CENTER);
+        gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
         if(loadComplete) {
             gameController.getGraphics().writeText(Assets.wordTrie.getWordCount() + " words loaded", centerWidth, (int)(centerHeight + barHeight + (LOADING_TEXT_SIZE * gameController.getGraphics().getScale())), Color.WHITE, 25, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
             gameController.setScreen(new HomeScreen(gameController));

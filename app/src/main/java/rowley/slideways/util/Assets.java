@@ -11,4 +11,5 @@ public class Assets {
     public static WordTrie wordTrie;
     public static final int MAX_BEST_GAMES = 12;
     public static BestGameList bestGameList;
+    public static boolean isGameInProgress = false;
 }
