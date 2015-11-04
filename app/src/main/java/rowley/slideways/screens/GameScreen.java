@@ -11,12 +11,18 @@ import jrowley.gamecontrollib.screen_control.ScreenController;
  * Created by jrowley on 11/4/15.
  */
 public class GameScreen extends ScreenController {
+    private boolean hasBackBeenPressed = false;
+
     public GameScreen(GameController gameController) {
         super(gameController);
     }
 
     @Override
     public void update(float portionOfSecond) {
+        if(hasBackBeenPressed) {
+            gameController.setScreen(new HomeScreen(gameController));
+            return;
+        }
         //nothing yet
     }
 
@@ -39,5 +45,11 @@ public class GameScreen extends ScreenController {
     @Override
     public void dispose() {
 
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        hasBackBeenPressed = true;
+        return true;
     }
 }
