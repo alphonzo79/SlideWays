@@ -11,6 +11,8 @@ import rowley.slideways.data.dao.BestGamesDao;
 import rowley.slideways.data.dao.IBestGamesDao;
 import rowley.slideways.data.dao.IDatabaseConfig;
 import rowley.slideways.data.dao.ReleaseDatabaseConfig;
+import rowley.slideways.util.EnglishLetterManager;
+import rowley.slideways.util.LetterManager;
 
 /**
  * Created by jrowley on 11/4/15.
@@ -24,6 +26,7 @@ public class SlideWaysInjectionModule {
     }
 
     @Provides
+    @Singleton
     IDatabaseConfig provideDatabaseconfig() {
         return new ReleaseDatabaseConfig();
     }
@@ -32,5 +35,11 @@ public class SlideWaysInjectionModule {
     @Singleton
     IBestGamesDao provideBestGamesDao(IDatabaseConfig config) {
         return new BestGamesDao(context, config);
+    }
+
+    @Provides
+    @Singleton
+    LetterManager provideLetterManager() {
+        return new EnglishLetterManager();
     }
 }
