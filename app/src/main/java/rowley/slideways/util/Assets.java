@@ -13,4 +13,5 @@ public class Assets {
     public static BestGameList bestGameList;
     public static boolean isGameInProgress = false;
     public static LetterManager letterManager;
+    public static WordScorer wordScorer;
 }

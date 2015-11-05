@@ -12,7 +12,9 @@ import rowley.slideways.data.dao.IBestGamesDao;
 import rowley.slideways.data.dao.IDatabaseConfig;
 import rowley.slideways.data.dao.ReleaseDatabaseConfig;
 import rowley.slideways.util.EnglishLetterManager;
+import rowley.slideways.util.EnglishWordScorer;
 import rowley.slideways.util.LetterManager;
+import rowley.slideways.util.WordScorer;
 
 /**
  * Created by jrowley on 11/4/15.
@@ -41,5 +43,11 @@ public class SlideWaysInjectionModule {
     @Singleton
     LetterManager provideLetterManager() {
         return new EnglishLetterManager();
+    }
+
+    @Provides
+    @Singleton
+    WordScorer provideWordScorer(LetterManager letterManager) {
+        return new EnglishWordScorer(letterManager);
     }
 }

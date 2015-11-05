@@ -13,6 +13,7 @@ import rowley.slideways.SlideWaysApp;
 import rowley.slideways.data.dao.IBestGamesDao;
 import rowley.slideways.util.Assets;
 import rowley.slideways.util.LetterManager;
+import rowley.slideways.util.WordScorer;
 import rowley.wordtrie.WordTrie;
 import rx.Observable;
 import rx.Subscriber;
@@ -44,9 +45,10 @@ public class LoadingScreen extends ScreenController {
 
     @Inject
     IBestGamesDao bestGameDao;
-
     @Inject
     LetterManager letterManager;
+    @Inject
+    WordScorer wordScorer;
 
     public LoadingScreen(BaseGameControllerActivity gameController) {
         super(gameController);
@@ -72,6 +74,7 @@ public class LoadingScreen extends ScreenController {
                 Assets.bestGameList = bestGameDao.getBestGamesDecendingOrder(Assets.MAX_BEST_GAMES);
                 letterManager.initialize();
                 Assets.letterManager = letterManager;
+                Assets.wordScorer = wordScorer;
                 subscriber.onCompleted();
             }
         }).subscribeOn(Schedulers.newThread()).observeOn(Schedulers.immediate()).subscribe(new Action1<Void>() {
