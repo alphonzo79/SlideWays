@@ -2,6 +2,7 @@ package rowley.slideways.screens;
 
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 
 import javax.inject.Inject;
@@ -36,6 +37,8 @@ public class LoadingScreen extends ScreenController {
     private int barLeft;
     private int barTop;
     private final int LOADING_TEXT_SIZE_BASE = 40;
+    private final Typeface LOADING_TEXT_TYPEFACE = Typeface.DEFAULT_BOLD;
+    private final Paint.Align LOADING_TEXT_ALIGNMENT = Paint.Align.CENTER;
     private final float loadingTextSize;
     private final int loadingTextY;
     private final int SECONDS_TO_LOOP = 5;
@@ -67,7 +70,15 @@ public class LoadingScreen extends ScreenController {
 
         loading = gameController.getStringResource(R.string.loading);
         loadingTextSize = LOADING_TEXT_SIZE_BASE * gameController.getGraphics().getScale();
-        loadingTextY = (int) (centerHeight + barHeight + (loadingTextSize / 2));
+
+        Paint paint = new Paint();
+        paint.setTextAlign(LOADING_TEXT_ALIGNMENT);
+        paint.setTextSize(loadingTextSize);
+        paint.setTypeface(LOADING_TEXT_TYPEFACE);
+        Rect bounds = new Rect();
+        paint.getTextBounds(loading, 0, loading.length(), bounds);
+
+        loadingTextY = (int) (centerHeight + barHeight + (bounds.height() / 2));
 
         ((SlideWaysApp)gameController.getApplication()).applicationComponent().inject(this);
 
@@ -116,7 +127,7 @@ public class LoadingScreen extends ScreenController {
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.BLUE);
         gameController.getGraphics().drawRect(barLeft, barTop, (int) (maxBarWidth * percentComplete), barHeight, Color.GREEN);
-        gameController.getGraphics().writeText(loading, centerWidth, loadingTextY, Color.WHITE, loadingTextSize, Typeface.SANS_SERIF, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(loading, centerWidth, loadingTextY, Color.WHITE, loadingTextSize, LOADING_TEXT_TYPEFACE, LOADING_TEXT_ALIGNMENT);
         gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
         if(loadComplete) {
             gameController.setScreen(new HomeScreen(gameController));

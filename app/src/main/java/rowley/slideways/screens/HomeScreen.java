@@ -2,8 +2,11 @@ package rowley.slideways.screens;
 
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.util.Log;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 import jrowley.gamecontrollib.game_control.GameController;
@@ -33,6 +36,8 @@ public class HomeScreen extends ScreenController {
     private final float BUTTON_HEIGHT_RATIO = 0.25f;
     private final float HEIGHT_BETWEEN_BUTTONS_RATIO = 0.05f;
     private final float TEXT_SIZE_TO_BUTTON_RATIO = 0.4f;
+    private final Typeface BUTTON_TYPEFACE = Typeface.DEFAULT_BOLD;
+    private final Paint.Align BUTTON_ALIGNMENT = Paint.Align.CENTER;
 
     private String newGameString;
     private String continueGameString;
@@ -78,9 +83,14 @@ public class HomeScreen extends ScreenController {
         continueGameString = gameController.getStringResource(R.string.continue_game);
         highScoresString = gameController.getStringResource(R.string.high_scores);
 
-        //I don't know why dividing by 3 works here instead of dividing by 2. Font metrics, I suspect.
-        //But for now it works and we can move on. Maybe come back and figure it out later.
-        int textFromTopOffset = (buttonHeight / 2) + (buttonTextSize / 3);
+        Paint paint = new Paint();
+        paint.setTextAlign(BUTTON_ALIGNMENT);
+        paint.setTextSize(buttonTextSize);
+        paint.setTypeface(BUTTON_TYPEFACE);
+        Rect bounds = new Rect();
+        paint.getTextBounds(newGameString, 0, newGameString.length(), bounds);
+
+        int textFromTopOffset = (buttonHeight / 2) + (bounds.height() / 2);
         newGameTextBaseline = newButtonTop + textFromTopOffset;
         continueGameTextBaseline = continueButtonTop + textFromTopOffset;
         highScoreTextBaseline = highScoresButtonTop + textFromTopOffset;
@@ -146,9 +156,9 @@ public class HomeScreen extends ScreenController {
         buttonColor = isHighScoresPressed ? BUTTON_COLOR_PRESSED : BUTTON_COLOR_STANDARD;
         gameController.getGraphics().drawRect(buttonsLeft, highScoresButtonTop, buttonWidth, buttonHeight, buttonColor);
 
-        gameController.getGraphics().writeText(newGameString, centerWidth, newGameTextBaseline, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(continueGameString, centerWidth, continueGameTextBaseline, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(highScoresString, centerWidth, highScoreTextBaseline, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(newGameString, centerWidth, newGameTextBaseline, Color.WHITE, buttonTextSize, BUTTON_TYPEFACE, BUTTON_ALIGNMENT);
+        gameController.getGraphics().writeText(continueGameString, centerWidth, continueGameTextBaseline, Color.WHITE, buttonTextSize, BUTTON_TYPEFACE, BUTTON_ALIGNMENT);
+        gameController.getGraphics().writeText(highScoresString, centerWidth, highScoreTextBaseline, Color.WHITE, buttonTextSize, BUTTON_TYPEFACE, BUTTON_ALIGNMENT);
 
         gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
     }
