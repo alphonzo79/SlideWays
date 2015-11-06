@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.util.Log;
 
 import java.util.List;
 
@@ -40,6 +41,8 @@ public class SlidingLetterRail extends ScreenSectionController {
     private int lastX;
     private int lastY;
     private RailState railState = RailState.DEFAULT;
+    private float flingVelocity;
+    private final float FLING_FRICTION = 0.95f;
 
     public SlidingLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -80,11 +83,27 @@ public class SlidingLetterRail extends ScreenSectionController {
     }
 
     @Override
-    public void update(float v) {
+    public void update(float portionOfSecond) {
+        if(railState == RailState.FLUNG) {
+            int offset = (int) (flingVelocity * portionOfSecond);
+            offset = adjustCalculatedOffsetToStayWithinBounds(offset);
+            updateTilesWithOffset(offset);
+            flingVelocity = flingVelocity * FLING_FRICTION;
+
+            if(flingVelocity < 5 && flingVelocity > -5) {
+                railState = RailState.DEFAULT;
+            }
+        }
+
         List<TouchEvent> touchEvents = gameController.getInput().getTouchEvents();
 
+        int lastTouchOffset = 0;
         for(TouchEvent event : touchEvents) {
             if(event.getType() == TouchEvent.TOUCH_DOWN && touchIsInsideRail(event)) {
+                if(railState == RailState.FLUNG) {
+                    railState = RailState.DEFAULT;
+                }
+
                 lastX = event.getX();
                 lastY = event.getY();
             }
@@ -94,25 +113,19 @@ public class SlidingLetterRail extends ScreenSectionController {
                     railState = RailState.SLIDING;
                 }
 
-                int offset = event.getX() - lastX;
-
-                lastX = event.getX();
-                lastY = event.getY();
-
-                if(offset > 0 && (letterTiles[0].getLeft() + offset) > firstLetterLeftMax) {
-                    offset = firstLetterLeftMax - letterTiles[0].getLeft();
-                }
-                if(offset < 0 && (letterTiles[TILE_COUNT - 1].getLeft() + offset) < lastLetterLeftMin) {
-                    offset = lastLetterLeftMin - letterTiles[TILE_COUNT - 1].getLeft();
-                }
-
-                for(LetterTile tile : letterTiles) {
-                    tile.setLeft(tile.getLeft() + offset);
-                }
+                lastTouchOffset = getRailSlideOffset(event);
+                updateTilesWithOffset(lastTouchOffset);
             }
 
-            if(event.getType() == TouchEvent.TOUCH_UP && railState != RailState.DEFAULT) {
-                railState = RailState.DEFAULT;
+            if(event.getType() == TouchEvent.TOUCH_UP && railState == RailState.SLIDING) {
+//                lastTouchOffset = getRailSlideOffset(event);
+                if(lastTouchOffset != 0) {
+                    railState = RailState.FLUNG;
+                    updateTilesWithOffset(lastTouchOffset);
+                    flingVelocity = lastTouchOffset / portionOfSecond;
+                } else {
+                    railState = RailState.DEFAULT;
+                }
             }
         }
     }
@@ -124,10 +137,37 @@ public class SlidingLetterRail extends ScreenSectionController {
                 && event.getY() < sectionTop + sectionHeight - padding;
     }
 
+    private int getRailSlideOffset(TouchEvent event) {
+        int offset = event.getX() - lastX;
+
+        lastX = event.getX();
+        lastY = event.getY();
+
+        offset = adjustCalculatedOffsetToStayWithinBounds(offset);
+
+        return offset;
+    }
+
+    private int adjustCalculatedOffsetToStayWithinBounds(int offset) {
+        if(offset > 0 && (letterTiles[0].getLeft() + offset) > firstLetterLeftMax) {
+            offset = firstLetterLeftMax - letterTiles[0].getLeft();
+        }
+        if(offset < 0 && (letterTiles[TILE_COUNT - 1].getLeft() + offset) < lastLetterLeftMin) {
+            offset = lastLetterLeftMin - letterTiles[TILE_COUNT - 1].getLeft();
+        }
+
+        return offset;
+    }
+
+    private void updateTilesWithOffset(int offset) {
+        for(LetterTile tile : letterTiles) {
+            tile.setLeft(tile.getLeft() + offset);
+        }
+    }
+
     @Override
     public void present(float v) {
         for(LetterTile tile : letterTiles) {
-            //public void drawRect(int left, int top, int width, int height, int color);
             gameController.getGraphics().drawRect(tile.getLeft(), tile.getTop(), tileDimension, tileDimension, TILE_BACKGROUND_COLOR);
             gameController.getGraphics().writeText(String.valueOf(tile.getLetterDisplay()), tile.getLeft() + (tileDimension / 2),
                     tile.getTop() + letterBaselineFromTileTopOffset, LETTER_TEXT_COLOR, letterTextSize, LETTER_TYPEFACE, LETTER_ALIGNMENT);
@@ -150,6 +190,6 @@ public class SlidingLetterRail extends ScreenSectionController {
     }
 
     private enum RailState {
-        DEFAULT, SLIDING, LETTER_SELECTED
+        DEFAULT, SLIDING, FLUNG, LETTER_SELECTED
     }
 }

@@ -16,8 +16,8 @@ public class GameScreen extends ScreenController {
     private int screenWidth;
     private SlidingLetterRail letterRail;
     private int dividerLineY;
-    private int dividerLineHeight;
-    private final int DIVIDER_HEIGHT_BASE = 2;
+    private float dividerLineHeight;
+    private final float DIVIDER_HEIGHT_BASE = 1.5f;
 
     private final int PADDING_BASE = 30;
     private final int padding;
@@ -34,7 +34,7 @@ public class GameScreen extends ScreenController {
         letterRail = new SlidingLetterRail(0, letterRailTop, screenWidth, screenHeight - letterRailTop, gameController);
 
         dividerLineY = letterRailTop;
-        dividerLineHeight = (int) (DIVIDER_HEIGHT_BASE * gameController.getGraphics().getScale());
+        dividerLineHeight = DIVIDER_HEIGHT_BASE * gameController.getGraphics().getScale();
     }
 
     @Override
