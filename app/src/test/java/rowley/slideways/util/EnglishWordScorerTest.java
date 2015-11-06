@@ -21,6 +21,6 @@ public class EnglishWordScorerTest {
         Assert.assertEquals(5, scorer.getScoreForWord(new char[]{'a'}));
         Assert.assertEquals(12, scorer.getScoreForWord(new char[]{'a', 's'}));
         Assert.assertEquals(23, scorer.getScoreForWord(new char[]{'g', 'a', 's'}));
-        Assert.assertEquals(206, scorer.getScoreForWord(new char[]{'m', 'a', 's', 'a', 'g', 'a', 's', 'c', 'a', 'r'}));
+        Assert.assertEquals(211, scorer.getScoreForWord(new char[]{'m', 'a', 'd', 'a', 'g', 'a', 's', 'c', 'a', 'r'}));
     }
 }

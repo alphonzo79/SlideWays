@@ -32,19 +32,15 @@ public class HomeScreen extends ScreenController {
     private final float BUTTON_WIDTH_RATIO = 0.4f;
     private final float BUTTON_HEIGHT_RATIO = 0.25f;
     private final float HEIGHT_BETWEEN_BUTTONS_RATIO = 0.05f;
-    private final float TEXT_SIZE_TO_BUTTON_RATIO = 0.125f;
+    private final float TEXT_SIZE_TO_BUTTON_RATIO = 0.4f;
 
     private String newGameString;
     private String continueGameString;
     private String highScoresString;
     private int buttonTextSize;
-    private int newGameTextTop;
-    private int continueGameTextTop;
-    private int highScoreTextTop;
-
-    private int newButtonColor;
-    private int continueButtonColor;
-    private int highScoresButtonColor;
+    private int newGameTextBaseline;
+    private int continueGameTextBaseline;
+    private int highScoreTextBaseline;
 
     private final int BUTTON_COLOR_STANDARD = Color.BLUE;
     private final int BUTTON_COLOR_PRESSED = Color.BLUE - 125;
@@ -82,10 +78,12 @@ public class HomeScreen extends ScreenController {
         continueGameString = gameController.getStringResource(R.string.continue_game);
         highScoresString = gameController.getStringResource(R.string.high_scores);
 
-        int textFromTopOffset = (buttonHeight / 2) - (buttonTextSize / 2);
-        newGameTextTop = newButtonTop + textFromTopOffset;
-        continueGameTextTop = continueButtonTop + textFromTopOffset;
-        highScoreTextTop = highScoresButtonTop + textFromTopOffset;
+        //I don't know why dividing by 3 works here instead of dividing by 2. Font metrics, I suspect.
+        //But for now it works and we can move on. Maybe come back and figure it out later.
+        int textFromTopOffset = (buttonHeight / 2) + (buttonTextSize / 3);
+        newGameTextBaseline = newButtonTop + textFromTopOffset;
+        continueGameTextBaseline = continueButtonTop + textFromTopOffset;
+        highScoreTextBaseline = highScoresButtonTop + textFromTopOffset;
     }
 
     @Override
@@ -148,9 +146,9 @@ public class HomeScreen extends ScreenController {
         buttonColor = isHighScoresPressed ? BUTTON_COLOR_PRESSED : BUTTON_COLOR_STANDARD;
         gameController.getGraphics().drawRect(buttonsLeft, highScoresButtonTop, buttonWidth, buttonHeight, buttonColor);
 
-        gameController.getGraphics().writeText(newGameString, centerWidth, newGameTextTop, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(continueGameString, centerWidth, continueGameTextTop, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
-        gameController.getGraphics().writeText(highScoresString, centerWidth, highScoreTextTop, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(newGameString, centerWidth, newGameTextBaseline, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(continueGameString, centerWidth, continueGameTextBaseline, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(highScoresString, centerWidth, highScoreTextBaseline, Color.WHITE, buttonTextSize, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
 
         gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
     }

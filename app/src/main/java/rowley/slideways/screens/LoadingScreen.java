@@ -35,7 +35,9 @@ public class LoadingScreen extends ScreenController {
     private int centerHeight;
     private int barLeft;
     private int barTop;
-    private final int LOADING_TEXT_SIZE = 40;
+    private final int LOADING_TEXT_SIZE_BASE = 40;
+    private final float loadingTextSize;
+    private final int loadingTextY;
     private final int SECONDS_TO_LOOP = 5;
 
     private String loading;
@@ -64,6 +66,8 @@ public class LoadingScreen extends ScreenController {
         barTop = centerHeight - (barHeight / 2);
 
         loading = gameController.getStringResource(R.string.loading);
+        loadingTextSize = LOADING_TEXT_SIZE_BASE * gameController.getGraphics().getScale();
+        loadingTextY = (int) (centerHeight + barHeight + (loadingTextSize / 2));
 
         ((SlideWaysApp)gameController.getApplication()).applicationComponent().inject(this);
 
@@ -112,10 +116,9 @@ public class LoadingScreen extends ScreenController {
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.BLUE);
         gameController.getGraphics().drawRect(barLeft, barTop, (int) (maxBarWidth * percentComplete), barHeight, Color.GREEN);
-        gameController.getGraphics().writeText(loading, centerWidth, centerHeight + barHeight, Color.WHITE, LOADING_TEXT_SIZE, Typeface.SANS_SERIF, Paint.Align.CENTER);
+        gameController.getGraphics().writeText(loading, centerWidth, loadingTextY, Color.WHITE, loadingTextSize, Typeface.SANS_SERIF, Paint.Align.CENTER);
         gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
         if(loadComplete) {
-            gameController.getGraphics().writeText(Assets.wordTrie.getWordCount() + " words loaded", centerWidth, (int)(centerHeight + barHeight + (LOADING_TEXT_SIZE * gameController.getGraphics().getScale())), Color.WHITE, 25, Typeface.DEFAULT_BOLD, Paint.Align.CENTER);
             gameController.setScreen(new HomeScreen(gameController));
         }
     }

@@ -30,6 +30,8 @@ public class HighScoresScreen extends ScreenController {
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.RED);
         gameController.getGraphics().writeText("High Scores and Junk!", 120, 120, Color.BLACK, 36, Typeface.DEFAULT, Paint.Align.LEFT);
+
+        gameController.getFrameRateTracker().writeFrameRate(gameController.getGraphics());
     }
 
     @Override
