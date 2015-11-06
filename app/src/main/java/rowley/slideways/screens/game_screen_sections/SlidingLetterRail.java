@@ -40,9 +40,12 @@ public class SlidingLetterRail extends ScreenSectionController {
 
     private int lastX;
     private int lastY;
-    private RailState railState = RailState.DEFAULT;
+    private RailState railState = RailState.RESTING;
     private float flingVelocity;
     private final float FLING_FRICTION = 0.95f;
+    private float timeSinceLastTouchEvent;
+    private final float LONG_TOUCH_THRESHOLD = 0.4f;
+    private int selectedLetterIndex;
 
     public SlidingLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -91,43 +94,79 @@ public class SlidingLetterRail extends ScreenSectionController {
             flingVelocity = flingVelocity * FLING_FRICTION;
 
             if(flingVelocity < 5 && flingVelocity > -5) {
-                railState = RailState.DEFAULT;
+                railState = RailState.RESTING;
             }
         }
 
         List<TouchEvent> touchEvents = gameController.getInput().getTouchEvents();
 
+        timeSinceLastTouchEvent += portionOfSecond;
+
+        if(timeSinceLastTouchEvent > LONG_TOUCH_THRESHOLD && (railState == RailState.TOUCH_INITIATED || railState == RailState.SLIDING)) {
+            tryToPickUpLetter();
+        }
+
         int lastTouchOffset = 0;
         for(TouchEvent event : touchEvents) {
             if(event.getType() == TouchEvent.TOUCH_DOWN && touchIsInsideRail(event)) {
-                if(railState == RailState.FLUNG) {
-                    railState = RailState.DEFAULT;
-                }
+                railState = RailState.TOUCH_INITIATED;
 
                 lastX = event.getX();
                 lastY = event.getY();
             }
 
-            if(event.getType() == TouchEvent.TOUCH_DRAGGED && touchIsInsideRail(event)) {
-                if(railState == RailState.DEFAULT) {
-                    railState = RailState.SLIDING;
-                }
+            if(event.getType() == TouchEvent.TOUCH_DRAGGED) {
+                if(railState == RailState.TOUCH_INITIATED || railState == RailState.SLIDING) {
+                    if (railState != RailState.SLIDING) {
+                        railState = RailState.SLIDING;
+                    }
 
-                lastTouchOffset = getRailSlideOffset(event);
-                updateTilesWithOffset(lastTouchOffset);
+                    lastTouchOffset = getRailSlideOffset(event);
+                    updateTilesWithOffset(lastTouchOffset);
+                } else if(railState == RailState.LETTER_SELECTED) {
+                    //todo
+                }
             }
 
-            if(event.getType() == TouchEvent.TOUCH_UP && railState == RailState.SLIDING) {
-//                lastTouchOffset = getRailSlideOffset(event);
-                if(lastTouchOffset != 0) {
-                    railState = RailState.FLUNG;
-                    updateTilesWithOffset(lastTouchOffset);
-                    flingVelocity = lastTouchOffset / portionOfSecond;
+            if(event.getType() == TouchEvent.TOUCH_UP) {
+                if(railState == RailState.SLIDING) {
+                    //Generally an up is accompanied by a drag first. But what it if isn't?
+                    if (lastTouchOffset == 0) {
+                        lastTouchOffset = getRailSlideOffset(event);
+                    }
+                    if (lastTouchOffset != 0) {
+                        railState = RailState.FLUNG;
+                        updateTilesWithOffset(lastTouchOffset);
+                        flingVelocity = lastTouchOffset / portionOfSecond;
+                    } else {
+                        railState = RailState.RESTING;
+                    }
                 } else {
-                    railState = RailState.DEFAULT;
+                    railState = RailState.RESTING;
                 }
+            }
+
+            timeSinceLastTouchEvent = 0;
+        }
+    }
+
+    private void tryToPickUpLetter() {
+        for(int i = 0; i < letterTiles.length; i++) {
+            LetterTile tile = letterTiles[i];
+            if(lastX > tile.getLeft() && lastX < tile.getLeft() + tileDimension - 1
+                    && lastY > tile.getTop() && lastY < tile.getTop() + tileDimension - 1) {
+                pickUpLetter(i);
+                break;
             }
         }
+    }
+
+    private void pickUpLetter(int letterIndex) {
+        railState = RailState.LETTER_SELECTED;
+        letterTiles[letterIndex].setTop(letterTiles[letterIndex].getTop() - 25);
+        selectedLetterIndex = letterIndex;
+
+        //todo more?
     }
 
     private boolean touchIsInsideRail(TouchEvent event) {
@@ -190,6 +229,6 @@ public class SlidingLetterRail extends ScreenSectionController {
     }
 
     private enum RailState {
-        DEFAULT, SLIDING, FLUNG, LETTER_SELECTED
+        RESTING, TOUCH_INITIATED, SLIDING, FLUNG, LETTER_SELECTED
     }
 }
