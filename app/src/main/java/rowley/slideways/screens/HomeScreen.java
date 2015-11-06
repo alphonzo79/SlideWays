@@ -83,14 +83,10 @@ public class HomeScreen extends ScreenController {
         continueGameString = gameController.getStringResource(R.string.continue_game);
         highScoresString = gameController.getStringResource(R.string.high_scores);
 
-        Paint paint = new Paint();
-        paint.setTextAlign(BUTTON_ALIGNMENT);
-        paint.setTextSize(buttonTextSize);
-        paint.setTypeface(BUTTON_TYPEFACE);
         Rect bounds = new Rect();
-        paint.getTextBounds(newGameString, 0, newGameString.length(), bounds);
-
+        gameController.getGraphics().getTextBounds(newGameString, buttonTextSize, BUTTON_TYPEFACE, BUTTON_ALIGNMENT, bounds);
         int textFromTopOffset = (buttonHeight / 2) + (bounds.height() / 2);
+
         newGameTextBaseline = newButtonTop + textFromTopOffset;
         continueGameTextBaseline = continueButtonTop + textFromTopOffset;
         highScoreTextBaseline = highScoresButtonTop + textFromTopOffset;

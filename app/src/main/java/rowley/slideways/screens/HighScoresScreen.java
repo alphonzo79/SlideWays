@@ -19,6 +19,8 @@ public class HighScoresScreen extends ScreenController {
 
     @Override
     public void update(float portionOfSecond) {
+        gameController.getFrameRateTracker().update(portionOfSecond);
+
         if(hasBackBeenPressed) {
             gameController.setScreen(new HomeScreen(gameController));
             return;

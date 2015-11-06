@@ -71,14 +71,9 @@ public class LoadingScreen extends ScreenController {
         loading = gameController.getStringResource(R.string.loading);
         loadingTextSize = LOADING_TEXT_SIZE_BASE * gameController.getGraphics().getScale();
 
-        Paint paint = new Paint();
-        paint.setTextAlign(LOADING_TEXT_ALIGNMENT);
-        paint.setTextSize(loadingTextSize);
-        paint.setTypeface(LOADING_TEXT_TYPEFACE);
         Rect bounds = new Rect();
-        paint.getTextBounds(loading, 0, loading.length(), bounds);
-
-        loadingTextY = (int) (centerHeight + barHeight + (bounds.height() / 2));
+        gameController.getGraphics().getTextBounds(loading, loadingTextSize, LOADING_TEXT_TYPEFACE, LOADING_TEXT_ALIGNMENT, bounds);
+        loadingTextY = centerHeight + barHeight + (bounds.height() / 2);
 
         ((SlideWaysApp)gameController.getApplication()).applicationComponent().inject(this);
 

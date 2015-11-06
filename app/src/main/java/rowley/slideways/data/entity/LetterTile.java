@@ -10,6 +10,7 @@ public class LetterTile {
     private int height;
 
     private char letter;
+    private char letterDisplay;
 
     public int getLeft() {
         return left;
@@ -49,5 +50,10 @@ public class LetterTile {
 
     public void setLetter(char letter) {
         this.letter = letter;
+        this.letterDisplay = Character.toUpperCase(letter);
+    }
+
+    public char getLetterDisplay() {
+        return letterDisplay;
     }
 }

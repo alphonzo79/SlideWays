@@ -39,6 +39,8 @@ public class GameScreen extends ScreenController {
 
     @Override
     public void update(float portionOfSecond) {
+        gameController.getFrameRateTracker().update(portionOfSecond);
+
         if(hasBackBeenPressed) {
             gameController.setScreen(new HomeScreen(gameController));
             return;
@@ -51,7 +53,6 @@ public class GameScreen extends ScreenController {
     @Override
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.RED + 45);
-        gameController.getGraphics().writeText("Game Screen!", 120, 120, Color.WHITE, 36, Typeface.DEFAULT, Paint.Align.LEFT);
 
         letterRail.present(portionOfSecond);
         gameController.getGraphics().drawLine(padding, dividerLineY, screenWidth - padding, dividerLineY, dividerLineHeight, Color.BLACK);
