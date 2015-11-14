@@ -46,6 +46,8 @@ public class SlidingLetterRail extends ScreenSectionController {
     private float timeSinceLastTouchEvent;
     private final float LONG_TOUCH_THRESHOLD = 0.4f;
     private int selectedLetterIndex;
+    private final int LETTER_PICKUP_OFFSET_BASE = 10;
+    private final int letterPickupOffset;
 
     public SlidingLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -83,6 +85,8 @@ public class SlidingLetterRail extends ScreenSectionController {
 
             currentX += (tileDimension + padding);
         }
+
+        letterPickupOffset = (int) (LETTER_PICKUP_OFFSET_BASE * gameController.getGraphics().getScale());
     }
 
     @Override
@@ -113,6 +117,8 @@ public class SlidingLetterRail extends ScreenSectionController {
 
                 lastX = event.getX();
                 lastY = event.getY();
+
+                timeSinceLastTouchEvent = 0;
             }
 
             if(event.getType() == TouchEvent.TOUCH_DRAGGED) {
@@ -125,6 +131,11 @@ public class SlidingLetterRail extends ScreenSectionController {
                     updateTilesWithOffset(lastTouchOffset);
                 } else if(railState == RailState.LETTER_SELECTED) {
                     //todo
+                }
+
+                //some devices register drags even if there is no change. Others don't register a drag without change
+                if(lastTouchOffset != 0) {
+                    timeSinceLastTouchEvent = 0;
                 }
             }
 
@@ -144,9 +155,9 @@ public class SlidingLetterRail extends ScreenSectionController {
                 } else {
                     railState = RailState.RESTING;
                 }
-            }
 
-            timeSinceLastTouchEvent = 0;
+                timeSinceLastTouchEvent = 0;
+            }
         }
     }
 
@@ -163,7 +174,7 @@ public class SlidingLetterRail extends ScreenSectionController {
 
     private void pickUpLetter(int letterIndex) {
         railState = RailState.LETTER_SELECTED;
-        letterTiles[letterIndex].setTop(letterTiles[letterIndex].getTop() - 25);
+        letterTiles[letterIndex].detachFromStablePosition(letterTiles[letterIndex].getLeft(), letterTiles[letterIndex].getTop() - letterPickupOffset);
         selectedLetterIndex = letterIndex;
 
         //todo more?
