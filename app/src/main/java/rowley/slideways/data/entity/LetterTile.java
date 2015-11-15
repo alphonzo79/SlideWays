@@ -17,7 +17,7 @@ public class LetterTile {
     private char letter;
     private char letterDisplay;
 
-    private final int PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO = 3;
+    private final int PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO = 21;
     private int pixelsPerSecondToMove;
     private int xDiff;
     private int yDiff;

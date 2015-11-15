@@ -101,7 +101,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
         int lastTouchOffset = 0;
         for(TouchEvent event : touchEvents) {
-            if(event.getType() == TouchEvent.TOUCH_DOWN && touchIsInsideRail(event)) {
+            if(event.getType() == TouchEvent.TOUCH_DOWN && railState == RailState.RESTING && touchIsInsideRail(event)) {
                 railState = RailState.TOUCH_INITIATED;
 
                 lastX = event.getX();
@@ -120,6 +120,13 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                     updateTilesWithOffset(lastTouchOffset);
                 } else if(railState == RailState.LETTER_SELECTED) {
                     //todo
+                } else if(touchIsInsideRail(event)) {
+                    railState = RailState.TOUCH_INITIATED;
+
+                    lastX = event.getX();
+                    lastY = event.getY();
+
+                    timeSinceLastTouchEvent = 0;
                 }
 
                 //some devices register drags even if there is no change. Others don't register a drag without change
@@ -141,7 +148,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                     } else {
                         railState = RailState.RESTING;
                     }
-                } else {
+                } else if(railState != RailState.LETTER_SELECTED) {
                     railState = RailState.RESTING;
                 }
 
@@ -163,7 +170,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
     private void pickUpLetter(int letterIndex) {
         railState = RailState.LETTER_SELECTED;
-        if(pickedUpLetterReceiver != null && pickedUpLetterReceiver.tryReceiveControlOfLetter(letterTiles[letterIndex])) {
+        if(pickedUpLetterReceiver != null && pickedUpLetterReceiver.tryReceiveControlOfLetter(letterTiles[letterIndex], lastX, lastY)) {
             letterTiles[letterIndex].detachFromStablePosition(letterTiles[letterIndex].getLeft(), letterTiles[letterIndex].getTop() - letterPickupOffset);
             selectedLetterIndex = letterIndex;
 
@@ -259,7 +266,12 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     }
 
     @Override
-    public boolean tryReceiveControlOfLetter(LetterTile letter) {
+    public boolean tryReceiveControlOfLetter(LetterTile letter, int lastTouchX, int lastTouchY) {
+        for(int i = letterTiles.length - 1; i > selectedLetterIndex; i--) {
+            letterTiles[i] = letterTiles[i - 1];
+        }
+        letterTiles[selectedLetterIndex] = letter;
+        railState = RailState.RESTING;
         // TODO: 11/13/15  
         return false;
     }

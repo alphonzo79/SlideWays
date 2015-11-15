@@ -3,6 +3,7 @@ package rowley.slideways.screens;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.util.Log;
 
 import java.util.List;
 
@@ -34,8 +35,12 @@ public class GameScreen extends ScreenController implements LetterReceiver {
     private final int padding;
 
     private LetterTile detachedTile;
+    private boolean isDetachedTileReturningHome = false;
 
     private MovingLetterTileAttributes tileAttrs;
+
+    private int lastX;
+    private int lastY;
 
     public GameScreen(GameController gameController) {
         super(gameController);
@@ -66,9 +71,40 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         }
 
         if(detachedTile != null) {
-            // TODO: 11/14/15 Update the tile with touch events.
-            // TODO: 11/14/15 Update library to pass touch events to screen sections
+            if(!isDetachedTileReturningHome) {
+                for (TouchEvent event : touchEvents) {
+                    if (event.getType() == TouchEvent.TOUCH_DRAGGED) {
+                        //For now we will assume the touch is within the detached tile
+                        //Careful management of the touch events will allow us to avoid a few calculations
+                        int xDiff = event.getX() - lastX;
+                        int yDiff = event.getY() - lastY;
+                        detachedTile.setLeft(detachedTile.getLeft() + xDiff);
+                        detachedTile.setTop(detachedTile.getTop() + yDiff);
+                        letterRail.monitorDetachedTilePosition(detachedTile);
 
+                        lastX = event.getX();
+                        lastY = event.getY();
+                    }
+
+                    if (event.getType() == TouchEvent.TOUCH_UP) {
+                        lastX = event.getX();
+                        lastY = event.getY();
+
+                        if (letterRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
+                            detachedTile = null;
+                        } else {
+                            isDetachedTileReturningHome = true;
+                        }
+                    }
+                }
+            } else {
+                if(detachedTile.progressTowardLastStablePosition(portionOfSecond)) {
+                    // TODO: 11/14/15 What if it's not accepted?
+                    letterRail.tryReceiveControlOfLetter(detachedTile, detachedTile.getLeft(), detachedTile.getTop());
+                    detachedTile = null;
+                    isDetachedTileReturningHome = false;
+                }
+            }
         }
 
         letterRail.update(portionOfSecond, touchEvents);
@@ -115,8 +151,10 @@ public class GameScreen extends ScreenController implements LetterReceiver {
     }
 
     @Override
-    public boolean tryReceiveControlOfLetter(LetterTile letter) {
+    public boolean tryReceiveControlOfLetter(LetterTile letter, int lastTouchX, int lastTouchY) {
         detachedTile = letter;
+        lastX = lastTouchX;
+        lastY = lastTouchY;
         //// TODO: 11/13/15  lett
 
         return true;
