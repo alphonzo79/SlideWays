@@ -80,6 +80,14 @@ public class LetterTile {
         this.top = newTop;
     }
 
+    public int getLastStableLeft() {
+        return lastStableLeft;
+    }
+
+    public int getLastStableTop() {
+        return lastStableTop;
+    }
+
     public boolean progressTowardLastStablePosition(float portionOfSecondDelta) {
         return progressTowardPosition(lastStableLeft, lastStableTop, portionOfSecondDelta);
     }
@@ -87,6 +95,14 @@ public class LetterTile {
     public void setDesiredPosition(int desiredLeft, int desiredTop) {
         this.desiredLeft = desiredLeft;
         this.desiredTop = desiredTop;
+    }
+
+    public int getDesiredLeft() {
+        return desiredLeft;
+    }
+
+    public int getDesiredTop() {
+        return desiredTop;
     }
 
     public boolean progressTowardDesiredPosition(float portionOfSecondDelta) {
@@ -114,10 +130,10 @@ public class LetterTile {
         // out negative. If we hit it right on one value will be 0
         xComponent = targetLeft - left;
         yComponent = targetTop - top;
-        if(xComponent * xDiff <= 0) {
+        if (xComponent * xDiff <= 0) {
             left = targetLeft;
         }
-        if(yComponent * yDiff <= 0) {
+        if (yComponent * yDiff <= 0) {
             top = targetTop;
         }
 

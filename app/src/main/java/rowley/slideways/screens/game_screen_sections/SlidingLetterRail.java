@@ -6,6 +6,7 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.util.Log;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -49,6 +50,8 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     private final int letterPickupOffset;
 
     private LetterReceiver pickedUpLetterReceiver;
+
+    private boolean[] tilesToAdjust = new boolean[TILE_COUNT];
 
     public SlidingLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -99,6 +102,20 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             tryToPickUpLetter();
         }
 
+        if(railState == RailState.ADJUSTING) {
+            boolean doneAdjusting = true;
+            for(int i = 0; i < tilesToAdjust.length; i++) {
+                if(tilesToAdjust[i] && !letterTiles[i].progressTowardDesiredPosition(portionOfSecond)) {
+                    doneAdjusting = false;
+                }
+            }
+
+            if(doneAdjusting) {
+                Arrays.fill(tilesToAdjust, false);
+                railState = RailState.RESTING;
+            }
+        }
+
         int lastTouchOffset = 0;
         for(TouchEvent event : touchEvents) {
             if(event.getType() == TouchEvent.TOUCH_DOWN && railState == RailState.RESTING && touchIsInsideRail(event)) {
@@ -118,15 +135,6 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
                     lastTouchOffset = getRailSlideOffset(event);
                     updateTilesWithOffset(lastTouchOffset);
-                } else if(railState == RailState.LETTER_SELECTED) {
-                    //todo
-                } else if(touchIsInsideRail(event)) {
-                    railState = RailState.TOUCH_INITIATED;
-
-                    lastX = event.getX();
-                    lastY = event.getY();
-
-                    timeSinceLastTouchEvent = 0;
                 }
 
                 //some devices register drags even if there is no change. Others don't register a drag without change
@@ -148,7 +156,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                     } else {
                         railState = RailState.RESTING;
                     }
-                } else if(railState != RailState.LETTER_SELECTED) {
+                } else if(railState != RailState.LETTER_SELECTED && railState != RailState.ADJUSTING) {
                     railState = RailState.RESTING;
                 }
 
@@ -174,10 +182,12 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             letterTiles[letterIndex].detachFromStablePosition(letterTiles[letterIndex].getLeft(), letterTiles[letterIndex].getTop() - letterPickupOffset);
             selectedLetterIndex = letterIndex;
 
-            for(; letterIndex < letterTiles.length - 1; letterIndex++) {
-                letterTiles[letterIndex] = letterTiles[letterIndex + 1];
-            }
-            letterTiles[letterIndex] = getNewLetterTile(letterTiles[letterIndex - 1].getLeft() + tileAttrs.getTileDimension() + Assets.padding);
+            letterTiles[selectedLetterIndex] = null;
+
+//            for(; letterIndex < letterTiles.length - 1; letterIndex++) {
+//                letterTiles[letterIndex] = letterTiles[letterIndex + 1];
+//            }
+//            letterTiles[letterIndex] = getNewLetterTile(letterTiles[letterIndex - 1].getLeft() + tileAttrs.getTileDimension() + Assets.padding);
         }
     }
 
@@ -219,11 +229,13 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     @Override
     public void present(float v) {
         for(LetterTile tile : letterTiles) {
-            gameController.getGraphics().drawRect(tile.getLeft(), tile.getTop(), tileAttrs.getTileDimension(),
-                    tileAttrs.getTileDimension(), tileAttrs.getTileBackgroundColor());
-            gameController.getGraphics().writeText(String.valueOf(tile.getLetterDisplay()), tile.getLeft() + (tileAttrs.getTileDimension() / 2),
-                    tile.getTop() + tileAttrs.getLetterBaselineFromTileTopOffset(), tileAttrs.getLetterTextColor(),
-                    tileAttrs.getLetterTextSize(), tileAttrs.getLetterTypeface(), tileAttrs.getLetterAlignment());
+            if(tile != null) {
+                gameController.getGraphics().drawRect(tile.getLeft(), tile.getTop(), tileAttrs.getTileDimension(),
+                        tileAttrs.getTileDimension(), tileAttrs.getTileBackgroundColor());
+                gameController.getGraphics().writeText(String.valueOf(tile.getLetterDisplay()), tile.getLeft() + (tileAttrs.getTileDimension() / 2),
+                        tile.getTop() + tileAttrs.getLetterBaselineFromTileTopOffset(), tileAttrs.getLetterTextColor(),
+                        tileAttrs.getLetterTextSize(), tileAttrs.getLetterTypeface(), tileAttrs.getLetterAlignment());
+            }
         }
     }
 
@@ -267,16 +279,56 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
     @Override
     public boolean tryReceiveControlOfLetter(LetterTile letter, int lastTouchX, int lastTouchY) {
-        for(int i = letterTiles.length - 1; i > selectedLetterIndex; i--) {
-            letterTiles[i] = letterTiles[i - 1];
+        //first, can we consider accepting it?
+        if(letter.getTop() < sectionTop + sectionHeight - Assets.padding
+                && letter.getTop() + letter.getHeight() > sectionTop + Assets.padding) {
+            //We're inside the vertical bounds of our letters, let's figure out where it needs to go
+            int targetIndex = selectedLetterIndex;
+            for(int i = 0; i < letterTiles.length; i++) {
+                if(i == selectedLetterIndex) {
+                    continue;
+                }
+                if((letter.getLeft() > letterTiles[i].getLeft()
+                        && letter.getLeft() < letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))
+                        || (letter.getLeft() + letter.getWidth() < letterTiles[i].getLeft() + letterTiles[i].getWidth()
+                        && letter.getLeft() + letter.getWidth() > letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))) {
+                    targetIndex = i;
+                    break;
+                }
+            }
+
+            if(targetIndex < selectedLetterIndex) {
+                for(int i = selectedLetterIndex; i > targetIndex; i--) {
+                    letterTiles[i] = letterTiles[i - 1];
+                    letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() + letterTiles[i].getWidth() + Assets.padding, letterTiles[i].getTop());
+                    tilesToAdjust[i] = true;
+                }
+                letter.setDesiredPosition(letterTiles[targetIndex + 1].getDesiredLeft() - letter.getWidth() - Assets.padding,
+                        letterTiles[targetIndex + 1].getDesiredTop());
+                railState = RailState.ADJUSTING;
+            } else if(targetIndex > selectedLetterIndex) {
+                for(int i = selectedLetterIndex; i < targetIndex; i++) {
+                    letterTiles[i] = letterTiles[i + 1];
+                    letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() - letterTiles[i].getWidth() - Assets.padding, letterTiles[i].getTop());
+                    tilesToAdjust[i] = true;
+                }
+                letter.setDesiredPosition(letterTiles[targetIndex - 1].getDesiredLeft() + letter.getWidth() + Assets.padding,
+                        letterTiles[targetIndex - 1].getDesiredTop());
+                railState = RailState.ADJUSTING;
+            } else {
+                letter.setDesiredPosition(letter.getLastStableLeft(), letter.getLastStableTop());
+                railState = RailState.ADJUSTING;
+            }
+
+            letterTiles[targetIndex] = letter;
+            tilesToAdjust[targetIndex] = true;
+
+            return true;
         }
-        letterTiles[selectedLetterIndex] = letter;
-        railState = RailState.RESTING;
-        // TODO: 11/13/15  
         return false;
     }
 
     private enum RailState {
-        RESTING, TOUCH_INITIATED, SLIDING, FLUNG, LETTER_SELECTED
+        RESTING, TOUCH_INITIATED, SLIDING, FLUNG, LETTER_SELECTED, ADJUSTING
     }
 }
