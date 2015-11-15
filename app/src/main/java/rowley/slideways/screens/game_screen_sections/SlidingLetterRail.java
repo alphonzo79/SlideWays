@@ -45,7 +45,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     private final float FLING_FRICTION = 0.95f;
     private float timeSinceLastTouchEvent;
     private final float LONG_TOUCH_THRESHOLD = 0.4f;
-    private int selectedLetterIndex;
+    private int selectedLetterIndex = -1;
     private final int LETTER_PICKUP_OFFSET_BASE = 10;
     private final int letterPickupOffset;
 
@@ -183,11 +183,6 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             selectedLetterIndex = letterIndex;
 
             letterTiles[selectedLetterIndex] = null;
-
-//            for(; letterIndex < letterTiles.length - 1; letterIndex++) {
-//                letterTiles[letterIndex] = letterTiles[letterIndex + 1];
-//            }
-//            letterTiles[letterIndex] = getNewLetterTile(letterTiles[letterIndex - 1].getLeft() + tileAttrs.getTileDimension() + Assets.padding);
         }
     }
 
@@ -274,7 +269,21 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     
     @Override
     public void onDetachedTileAcceptedByOther() {
-        // TODO: 11/14/15  
+        if(selectedLetterIndex > -1) {
+            for (; selectedLetterIndex < letterTiles.length - 1; selectedLetterIndex++) {
+                letterTiles[selectedLetterIndex] = letterTiles[selectedLetterIndex + 1];
+                letterTiles[selectedLetterIndex].setDesiredPosition(letterTiles[selectedLetterIndex].getLeft() - letterTiles[selectedLetterIndex].getWidth() - Assets.padding, letterTiles[selectedLetterIndex].getTop());
+                tilesToAdjust[selectedLetterIndex] = true;
+            }
+            letterTiles[selectedLetterIndex] = getNewLetterTile(letterTiles[selectedLetterIndex - 1].getLeft()
+                    + tileAttrs.getTileDimension() + Assets.padding);
+            letterTiles[selectedLetterIndex].setDesiredPosition(letterTiles[selectedLetterIndex - 1].getLeft(), letterTiles[selectedLetterIndex - 1].getTop());
+            tilesToAdjust[selectedLetterIndex] = true;
+
+            selectedLetterIndex = -1;
+
+            railState = RailState.ADJUSTING;
+        }
     }
 
     @Override
@@ -284,16 +293,23 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                 && letter.getTop() + letter.getHeight() > sectionTop + Assets.padding) {
             //We're inside the vertical bounds of our letters, let's figure out where it needs to go
             int targetIndex = selectedLetterIndex;
-            for(int i = 0; i < letterTiles.length; i++) {
-                if(i == selectedLetterIndex) {
-                    continue;
-                }
-                if((letter.getLeft() > letterTiles[i].getLeft()
-                        && letter.getLeft() < letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))
-                        || (letter.getLeft() + letter.getWidth() < letterTiles[i].getLeft() + letterTiles[i].getWidth()
-                        && letter.getLeft() + letter.getWidth() > letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))) {
-                    targetIndex = i;
-                    break;
+            for(int i = 0; i < letterTiles.length - 1; i++) {
+                //We will favor sliding toward the current selected. So less than selected we will
+                //favor replacing the earliest possible. After the selected we will favor replacing
+                //the latest possible
+                if(i < selectedLetterIndex) {
+                    if(letter.getLeft() <  letterTiles[i].getLeft() + letter.getWidth()) {
+                        targetIndex = i;
+                        break;
+                    }
+                } else {
+                    //// TODO: 11/14/15 this on actually moves one shortter than I intend sometimes
+                    // TODO: 11/14/15 But I can't figure out the magic combo at the moment. Come back to this 
+                    if(letter.getLeft() < letterTiles[i + 1].getLeft() + letterTiles[i + 1].getWidth()
+                            && letter.getLeft() + letter.getWidth() > letterTiles[i + 1].getLeft()) {
+                        targetIndex = i + 1;
+                        break;
+                    }
                 }
             }
 
