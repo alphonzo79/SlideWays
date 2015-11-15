@@ -30,6 +30,7 @@ import rowley.slideways.util.MovingLetterTileAttributes;
 public class SlidingLetterRail extends ScreenSectionController implements DetachedTileMonitor, LetterReceiver {
     private ObjectPool<LetterTile> tilePool;
     private LetterTile[] letterTiles;
+    // TODO: 11/15/15 Add an on-deck array of tiles
 
     private final int TILE_COUNT = 15;
 
@@ -41,6 +42,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     private int lastX;
     private int lastY;
     private RailState railState = RailState.RESTING;
+    private RailState targetRailStateAfterAdjustment = RailState.RESTING;
     private float flingVelocity;
     private final float FLING_FRICTION = 0.95f;
     private float timeSinceLastTouchEvent;
@@ -112,7 +114,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
             if(doneAdjusting) {
                 Arrays.fill(tilesToAdjust, false);
-                railState = RailState.RESTING;
+                railState = targetRailStateAfterAdjustment;
             }
         }
 
@@ -264,7 +266,19 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
     @Override
     public void monitorDetachedTilePosition(LetterTile tile) {
-        //// TODO: 11/13/15 Determine if we need to nudge any of the other tiles 
+        //Do we need to do anything in response -- is it even in our bounds:
+        if(tile.getTop() < sectionTop + sectionHeight - Assets.padding
+                && tile.getTop() + tile.getHeight() > sectionTop + Assets.padding) {
+            if(railState != RailState.ADJUSTING) {
+                int targetIndex = findTargetIndexForMovingTile(tile);
+
+                targetRailStateAfterAdjustment = railState;
+                railState = RailState.ADJUSTING;
+            }
+            //// TODO: 11/13/15 Determine if we need to nudge any of the other tiles
+            // TODO: 11/15/15 Determine if we have made room for a tile before and now we need to close back in
+
+        }
     }
     
     @Override
@@ -283,6 +297,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             selectedLetterIndex = -1;
 
             railState = RailState.ADJUSTING;
+            targetRailStateAfterAdjustment = RailState.RESTING;
         }
     }
 
@@ -292,26 +307,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
         if(letter.getTop() < sectionTop + sectionHeight - Assets.padding
                 && letter.getTop() + letter.getHeight() > sectionTop + Assets.padding) {
             //We're inside the vertical bounds of our letters, let's figure out where it needs to go
-            int targetIndex = selectedLetterIndex;
-            for(int i = 0; i < letterTiles.length - 1; i++) {
-                //We will favor sliding toward the current selected. So less than selected we will
-                //favor replacing the earliest possible. After the selected we will favor replacing
-                //the latest possible
-                if(i < selectedLetterIndex) {
-                    if(letter.getLeft() <  letterTiles[i].getLeft() + letter.getWidth()) {
-                        targetIndex = i;
-                        break;
-                    }
-                } else {
-                    //// TODO: 11/14/15 this on actually moves one shortter than I intend sometimes
-                    // TODO: 11/14/15 But I can't figure out the magic combo at the moment. Come back to this 
-                    if(letter.getLeft() < letterTiles[i + 1].getLeft() + letterTiles[i + 1].getWidth()
-                            && letter.getLeft() + letter.getWidth() > letterTiles[i + 1].getLeft()) {
-                        targetIndex = i + 1;
-                        break;
-                    }
-                }
-            }
+            int targetIndex = findTargetIndexForMovingTile(letter);
 
             if(targetIndex < selectedLetterIndex) {
                 for(int i = selectedLetterIndex; i > targetIndex; i--) {
@@ -321,7 +317,6 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                 }
                 letter.setDesiredPosition(letterTiles[targetIndex + 1].getDesiredLeft() - letter.getWidth() - Assets.padding,
                         letterTiles[targetIndex + 1].getDesiredTop());
-                railState = RailState.ADJUSTING;
             } else if(targetIndex > selectedLetterIndex) {
                 for(int i = selectedLetterIndex; i < targetIndex; i++) {
                     letterTiles[i] = letterTiles[i + 1];
@@ -330,18 +325,43 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                 }
                 letter.setDesiredPosition(letterTiles[targetIndex - 1].getDesiredLeft() + letter.getWidth() + Assets.padding,
                         letterTiles[targetIndex - 1].getDesiredTop());
-                railState = RailState.ADJUSTING;
             } else {
                 letter.setDesiredPosition(letter.getLastStableLeft(), letter.getLastStableTop());
-                railState = RailState.ADJUSTING;
             }
 
             letterTiles[targetIndex] = letter;
             tilesToAdjust[targetIndex] = true;
+            railState = RailState.ADJUSTING;
+            targetRailStateAfterAdjustment = RailState.RESTING;
 
             return true;
         }
         return false;
+    }
+
+    private int findTargetIndexForMovingTile(LetterTile movingTile) {
+        int targetIndex = selectedLetterIndex;
+        for(int i = 0; i < letterTiles.length - 1; i++) {
+            //We will favor sliding toward the current selected. So less than selected we will
+            //favor replacing the earliest possible. After the selected we will favor replacing
+            //the latest possible
+            if(i < selectedLetterIndex) {
+                if(movingTile.getLeft() <  letterTiles[i].getLeft() + movingTile.getWidth()) {
+                    targetIndex = i;
+                    break;
+                }
+            } else {
+                //// TODO: 11/14/15 this on actually moves one shortter than I intend sometimes
+                // TODO: 11/14/15 But I can't figure out the magic combo at the moment. Come back to this
+                if(movingTile.getLeft() < letterTiles[i + 1].getLeft() + letterTiles[i + 1].getWidth()
+                        && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i + 1].getLeft()) {
+                    targetIndex = i + 1;
+                    break;
+                }
+            }
+        }
+
+        return targetIndex;
     }
 
     private enum RailState {
