@@ -8,32 +8,31 @@ import android.util.Log;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
+import jrowley.gamecontrollib.game_control.BaseGameControllerActivity;
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.pooling.ObjectPool;
 import jrowley.gamecontrollib.screen_control.ScreenSectionController;
+import rowley.slideways.SlideWaysApp;
+import rowley.slideways.activity.GameActivity;
 import rowley.slideways.data.entity.LetterTile;
+import rowley.slideways.screens.DetachedTileMonitor;
+import rowley.slideways.screens.LetterReceiver;
 import rowley.slideways.util.Assets;
+import rowley.slideways.util.MovingLetterTileAttributes;
 
 /**
  * Created by jrowley on 11/5/15.
  */
-public class SlidingLetterRail extends ScreenSectionController {
+public class SlidingLetterRail extends ScreenSectionController implements DetachedTileMonitor, LetterReceiver {
     private ObjectPool<LetterTile> tilePool;
     private LetterTile[] letterTiles;
 
-    private final int TILE_COUNT = 12;
-    private final int tileDimension;
-    private final int TILE_BACKGROUND_COLOR = 0x55ffffff;
-    private final int LETTER_TEXT_COLOR = Color.BLACK;
-    private final float letterTextSize;
-    private final float LETTER_TEXT_SIZE_RATIO = 0.8f;
-    private final Typeface LETTER_TYPEFACE = Typeface.DEFAULT_BOLD;
-    private final Paint.Align LETTER_ALIGNMENT = Paint.Align.CENTER;
-    private final int letterBaselineFromTileTopOffset;
+    private final int TILE_COUNT = 15;
 
-    private final int PADDING_BASE = 20;
-    private final int padding;
+    private MovingLetterTileAttributes tileAttrs;
 
     private final int firstLetterLeftMax;
     private final int lastLetterLeftMin;
@@ -49,25 +48,22 @@ public class SlidingLetterRail extends ScreenSectionController {
     private final int LETTER_PICKUP_OFFSET_BASE = 10;
     private final int letterPickupOffset;
 
+    private LetterReceiver pickedUpLetterReceiver;
+
     public SlidingLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
 
-        padding = (int) (PADDING_BASE * gameController.getGraphics().getScale());
-        tileDimension = sectionHeight - (padding * 2);
-        letterTextSize = tileDimension * LETTER_TEXT_SIZE_RATIO;
-        Rect bounds = new Rect();
-        gameController.getGraphics().getTextBounds("A", letterTextSize, LETTER_TYPEFACE, LETTER_ALIGNMENT, bounds);
-        letterBaselineFromTileTopOffset = (tileDimension / 2) + (bounds.height() / 2);
+        tileAttrs = MovingLetterTileAttributes.getInstance(gameController);
 
-        firstLetterLeftMax = sectionLeft + padding;
-        lastLetterLeftMin = sectionLeft + sectionWidth - padding - tileDimension;
+        firstLetterLeftMax = sectionLeft + Assets.padding;
+        lastLetterLeftMin = sectionLeft + sectionWidth - Assets.padding - tileAttrs.getTileDimension();
 
         tilePool = new ObjectPool<>(new ObjectPool.PoolObjectFactory<LetterTile>() {
             @Override
             public LetterTile createObject() {
                 LetterTile tile = new LetterTile();
-                tile.setHeight(tileDimension);
-                tile.setWidth(tileDimension);
+                tile.setHeight(tileAttrs.getTileDimension());
+                tile.setWidth(tileAttrs.getTileDimension());
 
                 return tile;
             }
@@ -76,21 +72,16 @@ public class SlidingLetterRail extends ScreenSectionController {
         letterTiles = new LetterTile[TILE_COUNT];
         int currentX = firstLetterLeftMax;
         for(int i = 0; i < letterTiles.length; i++) {
-            LetterTile tile = tilePool.newObject();
-            tile.setLeft(currentX);
-            tile.setTop(sectionTop + padding);
-            tile.setLetter(Assets.letterManager.getNextLetter());
-
+            LetterTile tile = getNewLetterTile(currentX);
             letterTiles[i] = tile;
-
-            currentX += (tileDimension + padding);
+            currentX += (tileAttrs.getTileDimension() + Assets.padding);
         }
 
         letterPickupOffset = (int) (LETTER_PICKUP_OFFSET_BASE * gameController.getGraphics().getScale());
     }
 
     @Override
-    public void update(float portionOfSecond) {
+    public void update(float portionOfSecond, List<TouchEvent> touchEvents) {
         if(railState == RailState.FLUNG) {
             int offset = (int) (flingVelocity * portionOfSecond);
             offset = adjustCalculatedOffsetToStayWithinBounds(offset);
@@ -101,8 +92,6 @@ public class SlidingLetterRail extends ScreenSectionController {
                 railState = RailState.RESTING;
             }
         }
-
-        List<TouchEvent> touchEvents = gameController.getInput().getTouchEvents();
 
         timeSinceLastTouchEvent += portionOfSecond;
 
@@ -164,8 +153,8 @@ public class SlidingLetterRail extends ScreenSectionController {
     private void tryToPickUpLetter() {
         for(int i = 0; i < letterTiles.length; i++) {
             LetterTile tile = letterTiles[i];
-            if(lastX > tile.getLeft() && lastX < tile.getLeft() + tileDimension - 1
-                    && lastY > tile.getTop() && lastY < tile.getTop() + tileDimension - 1) {
+            if(lastX > tile.getLeft() && lastX < tile.getLeft() + tileAttrs.getTileDimension() - 1
+                    && lastY > tile.getTop() && lastY < tile.getTop() + tileAttrs.getTileDimension() - 1) {
                 pickUpLetter(i);
                 break;
             }
@@ -174,17 +163,22 @@ public class SlidingLetterRail extends ScreenSectionController {
 
     private void pickUpLetter(int letterIndex) {
         railState = RailState.LETTER_SELECTED;
-        letterTiles[letterIndex].detachFromStablePosition(letterTiles[letterIndex].getLeft(), letterTiles[letterIndex].getTop() - letterPickupOffset);
-        selectedLetterIndex = letterIndex;
+        if(pickedUpLetterReceiver != null && pickedUpLetterReceiver.tryReceiveControlOfLetter(letterTiles[letterIndex])) {
+            letterTiles[letterIndex].detachFromStablePosition(letterTiles[letterIndex].getLeft(), letterTiles[letterIndex].getTop() - letterPickupOffset);
+            selectedLetterIndex = letterIndex;
 
-        //todo more?
+            for(; letterIndex < letterTiles.length - 1; letterIndex++) {
+                letterTiles[letterIndex] = letterTiles[letterIndex + 1];
+            }
+            letterTiles[letterIndex] = getNewLetterTile(letterTiles[letterIndex - 1].getLeft() + tileAttrs.getTileDimension() + Assets.padding);
+        }
     }
 
     private boolean touchIsInsideRail(TouchEvent event) {
         return event.getX() > sectionLeft
                 && event.getX() < sectionLeft + sectionWidth
-                && event.getY() > sectionTop + padding
-                && event.getY() < sectionTop + sectionHeight - padding;
+                && event.getY() > sectionTop + Assets.padding
+                && event.getY() < sectionTop + sectionHeight - Assets.padding;
     }
 
     private int getRailSlideOffset(TouchEvent event) {
@@ -218,9 +212,11 @@ public class SlidingLetterRail extends ScreenSectionController {
     @Override
     public void present(float v) {
         for(LetterTile tile : letterTiles) {
-            gameController.getGraphics().drawRect(tile.getLeft(), tile.getTop(), tileDimension, tileDimension, TILE_BACKGROUND_COLOR);
-            gameController.getGraphics().writeText(String.valueOf(tile.getLetterDisplay()), tile.getLeft() + (tileDimension / 2),
-                    tile.getTop() + letterBaselineFromTileTopOffset, LETTER_TEXT_COLOR, letterTextSize, LETTER_TYPEFACE, LETTER_ALIGNMENT);
+            gameController.getGraphics().drawRect(tile.getLeft(), tile.getTop(), tileAttrs.getTileDimension(),
+                    tileAttrs.getTileDimension(), tileAttrs.getTileBackgroundColor());
+            gameController.getGraphics().writeText(String.valueOf(tile.getLetterDisplay()), tile.getLeft() + (tileAttrs.getTileDimension() / 2),
+                    tile.getTop() + tileAttrs.getLetterBaselineFromTileTopOffset(), tileAttrs.getLetterTextColor(),
+                    tileAttrs.getLetterTextSize(), tileAttrs.getLetterTypeface(), tileAttrs.getLetterAlignment());
         }
     }
 
@@ -237,6 +233,35 @@ public class SlidingLetterRail extends ScreenSectionController {
     @Override
     public void dispose() {
 
+    }
+
+    private LetterTile getNewLetterTile(int xPosition) {
+        LetterTile tile = tilePool.newObject();
+        tile.setLeft(xPosition);
+        tile.setTop(sectionTop + Assets.padding);
+        tile.setLetter(Assets.letterManager.getNextLetter());
+
+        return tile;
+    }
+
+    public void setPickedUpLetterReceiver(LetterReceiver receiver) {
+        this.pickedUpLetterReceiver = receiver;
+    }
+
+    @Override
+    public void monitorDetachedTilePosition(LetterTile tile) {
+        //// TODO: 11/13/15 Determine if we need to nudge any of the other tiles 
+    }
+    
+    @Override
+    public void onDetachedTileAcceptedByOther() {
+        // TODO: 11/14/15  
+    }
+
+    @Override
+    public boolean tryReceiveControlOfLetter(LetterTile letter) {
+        // TODO: 11/13/15  
+        return false;
     }
 
     private enum RailState {

@@ -8,6 +8,7 @@ import android.graphics.Typeface;
 import javax.inject.Inject;
 
 import jrowley.gamecontrollib.game_control.BaseGameControllerActivity;
+import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 import rowley.slideways.R;
 import rowley.slideways.SlideWaysApp;
@@ -85,6 +86,9 @@ public class LoadingScreen extends ScreenController {
                 letterManager.initialize();
                 Assets.letterManager = letterManager;
                 Assets.wordScorer = wordScorer;
+
+                Assets.padding = (int) (Assets.PADDING_BASE * LoadingScreen.this.gameController.getGraphics().getScale());
+
                 subscriber.onCompleted();
             }
         }).subscribeOn(Schedulers.newThread()).observeOn(Schedulers.immediate()).subscribe(new Action1<Void>() {

@@ -14,4 +14,7 @@ public class Assets {
     public static boolean isGameInProgress = false;
     public static LetterManager letterManager;
     public static WordScorer wordScorer;
+
+    public static final int PADDING_BASE = 20;
+    public static int padding;
 }

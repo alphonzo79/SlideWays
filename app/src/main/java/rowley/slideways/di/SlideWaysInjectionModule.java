@@ -14,6 +14,7 @@ import rowley.slideways.data.dao.ReleaseDatabaseConfig;
 import rowley.slideways.util.EnglishLetterManager;
 import rowley.slideways.util.EnglishWordScorer;
 import rowley.slideways.util.LetterManager;
+import rowley.slideways.util.MovingLetterTileAttributes;
 import rowley.slideways.util.WordScorer;
 
 /**
