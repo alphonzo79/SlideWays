@@ -1,23 +1,12 @@
 package rowley.slideways.screens.game_screen_sections;
 
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.util.Log;
-
 import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Inject;
-
-import jrowley.gamecontrollib.game_control.BaseGameControllerActivity;
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.pooling.ObjectPool;
 import jrowley.gamecontrollib.screen_control.ScreenSectionController;
-import rowley.slideways.SlideWaysApp;
-import rowley.slideways.activity.GameActivity;
 import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.screens.DetachedTileMonitor;
 import rowley.slideways.screens.LetterReceiver;
@@ -30,7 +19,7 @@ import rowley.slideways.util.MovingLetterTileAttributes;
 public class SlidingLetterRail extends ScreenSectionController implements DetachedTileMonitor, LetterReceiver {
     private ObjectPool<LetterTile> tilePool;
     private LetterTile[] letterTiles;
-    // TODO: 11/15/15 Add an on-deck array of tiles
+    private LetterTile[] onDeckTiles;
 
     private final int TILE_COUNT = 15;
 
@@ -75,10 +64,13 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
         }, TILE_COUNT * 2);
 
         letterTiles = new LetterTile[TILE_COUNT];
+        onDeckTiles = new LetterTile[TILE_COUNT];
+        for(int i = 0; i < onDeckTiles.length; i++) {
+            onDeckTiles[i] = getNewTileForOnDeck();
+        }
         int currentX = firstLetterLeftMax;
         for(int i = 0; i < letterTiles.length; i++) {
-            LetterTile tile = getNewLetterTile(currentX);
-            letterTiles[i] = tile;
+            letterTiles[i] = getTileFromOnDeck(currentX);
             currentX += (tileAttrs.getTileDimension() + Assets.padding);
         }
 
@@ -251,13 +243,31 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
     }
 
-    private LetterTile getNewLetterTile(int xPosition) {
+    private LetterTile getNewTileForOnDeck() {
         LetterTile tile = tilePool.newObject();
-        tile.setLeft(xPosition);
-        tile.setTop(sectionTop + Assets.padding);
-        tile.setLetter(Assets.letterManager.getNextLetter());
+        tile.setLeft(Assets.letterManager.getNextLetter());
 
         return tile;
+    }
+
+    private LetterTile getTileFromOnDeck(int xPosition) {
+        LetterTile tile = onDeckTiles[0];
+        tile.setLeft(xPosition);
+        tile.setTop(sectionTop + Assets.padding);
+
+        for(int i = 0; i < onDeckTiles.length - 1; i++) {
+            onDeckTiles[i] = onDeckTiles[i + 1];
+        }
+        onDeckTiles[onDeckTiles.length - 1] = getNewTileForOnDeck();
+
+        return tile;
+    }
+
+    private void pushTileBackIntoOnDeck(LetterTile tile) {
+        for(int i = onDeckTiles.length - 1; i > 0; i--) {
+            onDeckTiles[i] = onDeckTiles[i - 1];
+        }
+        onDeckTiles[0] = tile;
     }
 
     public void setPickedUpLetterReceiver(LetterReceiver receiver) {
@@ -289,7 +299,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                 letterTiles[selectedLetterIndex].setDesiredPosition(letterTiles[selectedLetterIndex].getLeft() - letterTiles[selectedLetterIndex].getWidth() - Assets.padding, letterTiles[selectedLetterIndex].getTop());
                 tilesToAdjust[selectedLetterIndex] = true;
             }
-            letterTiles[selectedLetterIndex] = getNewLetterTile(letterTiles[selectedLetterIndex - 1].getLeft()
+            letterTiles[selectedLetterIndex] = getTileFromOnDeck(letterTiles[selectedLetterIndex - 1].getLeft()
                     + tileAttrs.getTileDimension() + Assets.padding);
             letterTiles[selectedLetterIndex].setDesiredPosition(letterTiles[selectedLetterIndex - 1].getLeft(), letterTiles[selectedLetterIndex - 1].getTop());
             tilesToAdjust[selectedLetterIndex] = true;
