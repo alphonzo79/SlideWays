@@ -303,12 +303,26 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                     }
                     //If target matches selected, then do nothing
                 } else {
-                    // TODO: 11/15/15 Do we need to open up?
+                    pushTileBackIntoOnDeck(letterTiles[letterTiles.length - 1]);
+                    requestTilesShiftRight(targetIndex, letterTiles.length - 1);
+                    selectedLetterIndex = targetIndex;
+
+                    targetRailStateAfterAdjustment = railState;
+                    railState = RailState.ADJUSTING;
                 }
             }
 
-        } else if(railState == RailState.RESTING) {
-            // TODO: 11/15/15 Do we need to close back up after adding space for an incoming tile?
+        } else if(railState == RailState.RESTING && selectedLetterIndex != -1) {
+            requestTilesShiftLeft(selectedLetterIndex, letterTiles.length - 1);
+            letterTiles[letterTiles.length - 1] = getTileFromOnDeck(letterTiles[letterTiles.length - 2].getLeft()
+                    + tileAttrs.getTileDimension() + Assets.padding);
+            letterTiles[selectedLetterIndex].setDesiredPosition(letterTiles[letterTiles.length - 2].getLeft(), letterTiles[selectedLetterIndex - 1].getTop());
+            tilesToAdjust[letterTiles.length - 1] = true;
+
+            selectedLetterIndex = -1;
+
+            targetRailStateAfterAdjustment = railState;
+            railState = RailState.ADJUSTING;
         }
     }
     
