@@ -245,7 +245,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
 
     private LetterTile getNewTileForOnDeck() {
         LetterTile tile = tilePool.newObject();
-        tile.setLeft(Assets.letterManager.getNextLetter());
+        tile.setLetter(Assets.letterManager.getNextLetter());
 
         return tile;
     }
