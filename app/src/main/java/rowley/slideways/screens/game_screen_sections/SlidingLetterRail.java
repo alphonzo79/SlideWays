@@ -282,6 +282,10 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             if(railState != RailState.ADJUSTING) {
                 int targetIndex = findTargetIndexForMovingTile(tile);
 
+                if(railState == RailState.LETTER_SELECTED) {
+
+                }
+
                 targetRailStateAfterAdjustment = railState;
                 railState = RailState.ADJUSTING;
             }
@@ -320,19 +324,11 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             int targetIndex = findTargetIndexForMovingTile(letter);
 
             if(targetIndex < selectedLetterIndex) {
-                for(int i = selectedLetterIndex; i > targetIndex; i--) {
-                    letterTiles[i] = letterTiles[i - 1];
-                    letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() + letterTiles[i].getWidth() + Assets.padding, letterTiles[i].getTop());
-                    tilesToAdjust[i] = true;
-                }
+                requestTilesShiftRight(targetIndex, selectedLetterIndex);
                 letter.setDesiredPosition(letterTiles[targetIndex + 1].getDesiredLeft() - letter.getWidth() - Assets.padding,
                         letterTiles[targetIndex + 1].getDesiredTop());
             } else if(targetIndex > selectedLetterIndex) {
-                for(int i = selectedLetterIndex; i < targetIndex; i++) {
-                    letterTiles[i] = letterTiles[i + 1];
-                    letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() - letterTiles[i].getWidth() - Assets.padding, letterTiles[i].getTop());
-                    tilesToAdjust[i] = true;
-                }
+                requestTilesShiftLeft(selectedLetterIndex, targetIndex);
                 letter.setDesiredPosition(letterTiles[targetIndex - 1].getDesiredLeft() + letter.getWidth() + Assets.padding,
                         letterTiles[targetIndex - 1].getDesiredTop());
             } else {
@@ -347,6 +343,34 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             return true;
         }
         return false;
+    }
+
+    /**
+     * Shift tiles right (using a desired position and animated move). If a tile currently lives in the toIndex
+     * It will be overwritten. When the operation is complete there will be a gap at fromIndex (it was moved one right)
+     * @param fromIndex - inclusive
+     * @param toIndex - inclusive
+     */
+    private void requestTilesShiftRight(int fromIndex, int toIndex) {
+        for(int i = toIndex; i > fromIndex; i--) {
+            letterTiles[i] = letterTiles[i - 1];
+            letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() + letterTiles[i].getWidth() + Assets.padding, letterTiles[i].getTop());
+            tilesToAdjust[i] = true;
+        }
+    }
+
+    /**
+     * Shift tiles left (using a desired position and animated move). If a tile currently lives in the toIndex
+     * It will be overwritten. When the operation is complete there will be a gap at fromIndex (it was moved one left)
+     * @param toIndex - Inclusive
+     * @param fromIndex - Inclusive
+     */
+    private void requestTilesShiftLeft(int toIndex, int fromIndex) {
+        for(int i = toIndex; i < fromIndex; i++) {
+            letterTiles[i] = letterTiles[i + 1];
+            letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() - letterTiles[i].getWidth() - Assets.padding, letterTiles[i].getTop());
+            tilesToAdjust[i] = true;
+        }
     }
 
     private int findTargetIndexForMovingTile(LetterTile movingTile) {
