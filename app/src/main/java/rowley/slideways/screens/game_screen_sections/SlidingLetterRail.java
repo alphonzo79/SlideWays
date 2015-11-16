@@ -373,6 +373,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
         for(int i = toIndex; i > fromIndex; i--) {
             letterTiles[i] = letterTiles[i - 1];
             letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() + letterTiles[i].getWidth() + Assets.padding, letterTiles[i].getTop());
+            letterTiles[i - 1] = null;
             tilesToAdjust[i] = true;
         }
     }
@@ -387,6 +388,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
         for(int i = toIndex; i < fromIndex; i++) {
             letterTiles[i] = letterTiles[i + 1];
             letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() - letterTiles[i].getWidth() - Assets.padding, letterTiles[i].getTop());
+            letterTiles[i + 1] = null;
             tilesToAdjust[i] = true;
         }
     }
@@ -394,25 +396,16 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     private int findTargetIndexForMovingTile(LetterTile movingTile) {
         int targetIndex = selectedLetterIndex;
         for(int i = 0; i < letterTiles.length - 1; i++) {
-            //We will favor sliding the minimum number toward the current selected. So less than selected we will
-            //favor replacing the latest possible. After the selected we will favor replacing
-            //the earliest possible
-            if(i < selectedLetterIndex) {
-                if(movingTile.getLeft() <  letterTiles[i].getLeft() + movingTile.getWidth()) {
-                    //Can we do the next instead?
-                    if(i + 1 != selectedLetterIndex && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i + 1].getLeft()) {
-                        targetIndex = i + 1;
-                    } else {
-                        targetIndex = i;
-                    }
-                    break;
-                }
-            } else {
-                if(movingTile.getLeft() < letterTiles[i + 1].getLeft() + letterTiles[i + 1].getWidth()
-                        && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i + 1].getLeft()) {
-                    targetIndex = i + 1;
-                    break;
-                }
+            if(i == selectedLetterIndex) {
+                continue;
+            }
+
+            if((movingTile.getLeft() > letterTiles[i].getLeft()
+                    && movingTile.getLeft() < letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))
+                    || (movingTile.getLeft() + movingTile.getWidth() < letterTiles[i].getLeft() + letterTiles[i].getWidth()
+                    && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))) {
+                targetIndex = i;
+                break;
             }
         }
 
