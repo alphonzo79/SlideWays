@@ -283,15 +283,32 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
                 int targetIndex = findTargetIndexForMovingTile(tile);
 
                 if(railState == RailState.LETTER_SELECTED) {
+                    //Reset the selected state to match the new state if needed
+                    if(targetIndex < selectedLetterIndex) {
+                        requestTilesShiftRight(targetIndex, selectedLetterIndex);
+                        tile.setLastStablePosition(letterTiles[targetIndex + 1].getDesiredLeft() - tile.getWidth() - Assets.padding,
+                                letterTiles[targetIndex + 1].getDesiredTop());
+                        selectedLetterIndex = targetIndex;
 
+                        targetRailStateAfterAdjustment = railState;
+                        railState = RailState.ADJUSTING;
+                    } else if(targetIndex > selectedLetterIndex) {
+                        requestTilesShiftLeft(selectedLetterIndex, targetIndex);
+                        tile.setLastStablePosition(letterTiles[targetIndex - 1].getDesiredLeft() + tile.getWidth() + Assets.padding,
+                                letterTiles[targetIndex - 1].getDesiredTop());
+                        selectedLetterIndex = targetIndex;
+
+                        targetRailStateAfterAdjustment = railState;
+                        railState = RailState.ADJUSTING;
+                    }
+                    //If target matches selected, then do nothing
+                } else {
+                    // TODO: 11/15/15 Do we need to open up?
                 }
-
-                targetRailStateAfterAdjustment = railState;
-                railState = RailState.ADJUSTING;
             }
-            //// TODO: 11/13/15 Determine if we need to nudge any of the other tiles
-            // TODO: 11/15/15 Determine if we have made room for a tile before and now we need to close back in
 
+        } else if(railState == RailState.RESTING) {
+            // TODO: 11/15/15 Do we need to close back up after adding space for an incoming tile?
         }
     }
     
@@ -339,6 +356,7 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
             tilesToAdjust[targetIndex] = true;
             railState = RailState.ADJUSTING;
             targetRailStateAfterAdjustment = RailState.RESTING;
+            selectedLetterIndex = -1;
 
             return true;
         }

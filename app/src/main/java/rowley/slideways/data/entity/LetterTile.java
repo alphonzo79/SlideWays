@@ -73,11 +73,15 @@ public class LetterTile {
     }
 
     public void detachFromStablePosition(int newLeft, int newTop) {
-        lastStableLeft = this.left;
-        lastStableTop = this.top;
+        setLastStablePosition(this.left, this.top);
 
         this.left = newLeft;
         this.top = newTop;
+    }
+
+    public void setLastStablePosition(int left, int top) {
+        lastStableLeft = left;
+        lastStableTop = top;
     }
 
     public int getLastStableLeft() {
