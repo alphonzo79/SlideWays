@@ -342,17 +342,20 @@ public class SlidingLetterRail extends ScreenSectionController implements Detach
     private int findTargetIndexForMovingTile(LetterTile movingTile) {
         int targetIndex = selectedLetterIndex;
         for(int i = 0; i < letterTiles.length - 1; i++) {
-            //We will favor sliding toward the current selected. So less than selected we will
-            //favor replacing the earliest possible. After the selected we will favor replacing
-            //the latest possible
+            //We will favor sliding the minimum number toward the current selected. So less than selected we will
+            //favor replacing the latest possible. After the selected we will favor replacing
+            //the earliest possible
             if(i < selectedLetterIndex) {
                 if(movingTile.getLeft() <  letterTiles[i].getLeft() + movingTile.getWidth()) {
-                    targetIndex = i;
+                    //Can we do the next instead?
+                    if(i + 1 != selectedLetterIndex && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i + 1].getLeft()) {
+                        targetIndex = i + 1;
+                    } else {
+                        targetIndex = i;
+                    }
                     break;
                 }
             } else {
-                //// TODO: 11/14/15 this on actually moves one shortter than I intend sometimes
-                // TODO: 11/14/15 But I can't figure out the magic combo at the moment. Come back to this
                 if(movingTile.getLeft() < letterTiles[i + 1].getLeft() + letterTiles[i + 1].getWidth()
                         && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i + 1].getLeft()) {
                     targetIndex = i + 1;

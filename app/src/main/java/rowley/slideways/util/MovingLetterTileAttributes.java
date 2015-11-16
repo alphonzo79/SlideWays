@@ -33,7 +33,7 @@ public class MovingLetterTileAttributes {
         //remove one padding from width, then base tile dimen on the # of tiles we want to fit across
         //the screen, then subtract one padding from the width. This should leave us with MAX_WORD_LENGTH
         //tiles and left padding and one more right padding to fill the screen.
-        tileDimension = ((gameController.getGraphics().getWidth() - Assets.padding) / Assets.MAX_WORD_LENGTH) - Assets.padding;
+        tileDimension = ((gameController.getGraphics().getWidth() - Assets.padding) / Assets.LETTERS_PER_SCREEN) - Assets.padding;
         letterTextSize = tileDimension * LETTER_TEXT_SIZE_RATIO;
         Rect bounds = new Rect();
         gameController.getGraphics().getTextBounds("A", letterTextSize, LETTER_TYPEFACE, LETTER_ALIGNMENT, bounds);
