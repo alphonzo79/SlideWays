@@ -1,16 +1,13 @@
 package rowley.slideways;
 
 import android.app.Application;
-import android.util.Log;
 
 import javax.inject.Singleton;
 
 import dagger.Component;
 import rowley.slideways.activity.TestActivity;
 import rowley.slideways.di.SlideWaysInjectionModule;
-import rowley.slideways.screens.GameScreen;
 import rowley.slideways.screens.LoadingScreen;
-import rowley.slideways.screens.game_screen_sections.SlidingLetterRail;
 
 /**
  * Created by jrowley on 11/4/15.

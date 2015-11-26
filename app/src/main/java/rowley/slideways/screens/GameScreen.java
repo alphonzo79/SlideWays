@@ -1,22 +1,14 @@
 package rowley.slideways.screens;
 
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Typeface;
-import android.util.Log;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
-import jrowley.gamecontrollib.game_control.BaseGameControllerActivity;
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.screen_control.ScreenController;
-import rowley.slideways.SlideWaysApp;
-import rowley.slideways.activity.GameActivity;
 import rowley.slideways.data.entity.LetterTile;
-import rowley.slideways.screens.game_screen_sections.SlidingLetterRail;
+import rowley.slideways.screens.game_screen_sections.SupplyLetterRail;
 import rowley.slideways.util.Assets;
 import rowley.slideways.util.MovingLetterTileAttributes;
 
@@ -26,7 +18,7 @@ import rowley.slideways.util.MovingLetterTileAttributes;
 public class GameScreen extends ScreenController implements LetterReceiver {
     private boolean hasBackBeenPressed = false;
     private int screenWidth;
-    private SlidingLetterRail letterRail;
+    private SupplyLetterRail supplyLetterRail;
     private int dividerLineY;
     private float dividerLineHeight;
     private final float DIVIDER_HEIGHT_BASE = 1.5f;
@@ -53,8 +45,8 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         padding = (int) (PADDING_BASE * gameController.getGraphics().getScale());
 
         int letterRailTop = screenHeight - tileAttrs.getTileDimension() - (Assets.padding * 2);
-        letterRail = new SlidingLetterRail(0, letterRailTop, screenWidth, screenHeight - letterRailTop, gameController);
-        letterRail.setPickedUpLetterReceiver(this);
+        supplyLetterRail = new SupplyLetterRail(0, letterRailTop, screenWidth, screenHeight - letterRailTop, gameController);
+        supplyLetterRail.setPickedUpLetterReceiver(this);
 
         dividerLineY = letterRailTop;
         dividerLineHeight = DIVIDER_HEIGHT_BASE * gameController.getGraphics().getScale();
@@ -80,7 +72,7 @@ public class GameScreen extends ScreenController implements LetterReceiver {
                         int yDiff = event.getY() - lastY;
                         detachedTile.setLeft(detachedTile.getLeft() + xDiff);
                         detachedTile.setTop(detachedTile.getTop() + yDiff);
-                        letterRail.monitorDetachedTilePosition(detachedTile);
+                        supplyLetterRail.monitorDetachedTilePosition(detachedTile);
 
                         lastX = event.getX();
                         lastY = event.getY();
@@ -90,7 +82,7 @@ public class GameScreen extends ScreenController implements LetterReceiver {
                         lastX = event.getX();
                         lastY = event.getY();
 
-                        if (letterRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
+                        if (supplyLetterRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
                             detachedTile = null;
                         } else {
                             isDetachedTileReturningHome = true;
@@ -100,14 +92,14 @@ public class GameScreen extends ScreenController implements LetterReceiver {
             } else {
                 if(detachedTile.progressTowardLastStablePosition(portionOfSecond)) {
                     // TODO: 11/14/15 What if it's not accepted?
-                    letterRail.tryReceiveControlOfLetter(detachedTile, detachedTile.getLeft(), detachedTile.getTop());
+                    supplyLetterRail.tryReceiveControlOfLetter(detachedTile, detachedTile.getLeft(), detachedTile.getTop());
                     detachedTile = null;
                     isDetachedTileReturningHome = false;
                 }
             }
         }
 
-        letterRail.update(portionOfSecond, touchEvents);
+        supplyLetterRail.update(portionOfSecond, touchEvents);
         //nothing yet
     }
 
@@ -115,7 +107,7 @@ public class GameScreen extends ScreenController implements LetterReceiver {
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.RED + 45);
 
-        letterRail.present(portionOfSecond);
+        supplyLetterRail.present(portionOfSecond);
         gameController.getGraphics().drawLine(padding, dividerLineY, screenWidth - padding, dividerLineY, dividerLineHeight, Color.BLACK);
 
         if(detachedTile != null) {
@@ -131,17 +123,17 @@ public class GameScreen extends ScreenController implements LetterReceiver {
 
     @Override
     public void pause() {
-        letterRail.pause();
+        supplyLetterRail.pause();
     }
 
     @Override
     public void resume() {
-        letterRail.resume();
+        supplyLetterRail.resume();
     }
 
     @Override
     public void dispose() {
-        letterRail.dispose();
+        supplyLetterRail.dispose();
     }
 
     @Override
