@@ -8,6 +8,7 @@ import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 import rowley.slideways.data.entity.LetterTile;
+import rowley.slideways.screens.game_screen_sections.BuilderRail;
 import rowley.slideways.screens.game_screen_sections.SupplyLetterRail;
 import rowley.slideways.util.Assets;
 import rowley.slideways.util.MovingLetterTileAttributes;
@@ -19,12 +20,13 @@ public class GameScreen extends ScreenController implements LetterReceiver {
     private boolean hasBackBeenPressed = false;
     private int screenWidth;
     private SupplyLetterRail supplyLetterRail;
+    private BuilderRail builderRail;
     private int dividerLineY;
     private float dividerLineHeight;
     private final float DIVIDER_HEIGHT_BASE = 1.5f;
 
-    private final int PADDING_BASE = 30;
-    private final int padding;
+    private final int TOP_COMPONENTS_HEIGHT_BASE = 60;
+    private int topComponentsHeight;
 
     private LetterTile detachedTile;
     private boolean isDetachedTileReturningHome = false;
@@ -42,13 +44,18 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         screenWidth = gameController.getGraphics().getWidth();
         int screenHeight = gameController.getGraphics().getHeight();
 
-        padding = (int) (PADDING_BASE * gameController.getGraphics().getScale());
+        topComponentsHeight = (int) (TOP_COMPONENTS_HEIGHT_BASE * gameController.getGraphics().getScale());
 
-        int letterRailTop = screenHeight - tileAttrs.getTileDimension() - (Assets.padding * 2);
-        supplyLetterRail = new SupplyLetterRail(0, letterRailTop, screenWidth, screenHeight - letterRailTop, gameController);
+        int supplyRailTop = screenHeight - tileAttrs.getTileDimension() - (Assets.padding * 2);
+        int builderRailTop = supplyRailTop - tileAttrs.getTileDimension() - (Assets.padding * 2);
+
+        builderRail = new BuilderRail(0, builderRailTop, screenWidth, supplyRailTop - builderRailTop, gameController);
+        builderRail.setPickedUpLetterReceiver(this);
+
+        supplyLetterRail = new SupplyLetterRail(0, supplyRailTop, screenWidth, screenHeight - supplyRailTop, gameController);
         supplyLetterRail.setPickedUpLetterReceiver(this);
 
-        dividerLineY = letterRailTop;
+        dividerLineY = supplyRailTop;
         dividerLineHeight = DIVIDER_HEIGHT_BASE * gameController.getGraphics().getScale();
     }
 
@@ -82,7 +89,9 @@ public class GameScreen extends ScreenController implements LetterReceiver {
                         lastX = event.getX();
                         lastY = event.getY();
 
-                        if (supplyLetterRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
+                        if(builderRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
+                            detachedTile = null;
+                        } else if (supplyLetterRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
                             detachedTile = null;
                         } else {
                             isDetachedTileReturningHome = true;
@@ -99,16 +108,17 @@ public class GameScreen extends ScreenController implements LetterReceiver {
             }
         }
 
+        builderRail.update(portionOfSecond, touchEvents);
         supplyLetterRail.update(portionOfSecond, touchEvents);
-        //nothing yet
     }
 
     @Override
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.RED + 45);
 
+        builderRail.present(portionOfSecond);
         supplyLetterRail.present(portionOfSecond);
-        gameController.getGraphics().drawLine(padding, dividerLineY, screenWidth - padding, dividerLineY, dividerLineHeight, Color.BLACK);
+        gameController.getGraphics().drawLine(Assets.padding, dividerLineY, screenWidth - Assets.padding, dividerLineY, dividerLineHeight, Color.BLACK);
 
         if(detachedTile != null) {
             gameController.getGraphics().drawRect(detachedTile.getLeft(), detachedTile.getTop(), detachedTile.getWidth(), detachedTile.getHeight(), tileAttrs.getTileBackgroundColor());
@@ -147,7 +157,6 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         detachedTile = letter;
         lastX = lastTouchX;
         lastY = lastTouchY;
-        //// TODO: 11/13/15  lett
 
         return true;
     }

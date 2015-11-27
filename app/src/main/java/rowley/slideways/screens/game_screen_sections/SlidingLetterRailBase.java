@@ -47,6 +47,8 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
         letterTiles = new LetterTile[getTileCount()];
 
         letterPickupOffset = (int) (LETTER_PICKUP_OFFSET_BASE * gameController.getGraphics().getScale());
+
+        initializeTiles();
     }
 
     @Override
@@ -117,13 +119,20 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
         }
     }
 
+    @Override
+    public void present(float portionOfASecond) {
+        presentTiles();
+    }
+
     private void tryToPickUpLetter() {
         for(int i = 0; i < letterTiles.length; i++) {
             LetterTile tile = letterTiles[i];
-            if(lastX > tile.getLeft() && lastX < tile.getLeft() + tileAttrs.getTileDimension() - 1
-                    && lastY > tile.getTop() && lastY < tile.getTop() + tileAttrs.getTileDimension() - 1) {
-                pickUpLetter(i);
-                break;
+            if(tile != null) {
+                if (lastX > tile.getLeft() && lastX < tile.getLeft() + tileAttrs.getTileDimension() - 1
+                        && lastY > tile.getTop() && lastY < tile.getTop() + tileAttrs.getTileDimension() - 1) {
+                    pickUpLetter(i);
+                    break;
+                }
             }
         }
     }
@@ -167,7 +176,7 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
         return offset;
     }
 
-    private void updateTilesWithOffset(int offset) {
+    protected void updateTilesWithOffset(int offset) {
         for(LetterTile tile : letterTiles) {
             if(tile != null) {
                 tile.setLeft(tile.getLeft() + offset);
@@ -207,6 +216,7 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
     }
 
     protected abstract int getTileCount();
+    protected abstract void initializeTiles();
     protected abstract int getLeftmostObjectLeftEdge();
     protected abstract int getRightmostObjectLeftEdge();
 

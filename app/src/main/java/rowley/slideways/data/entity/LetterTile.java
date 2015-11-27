@@ -3,12 +3,7 @@ package rowley.slideways.data.entity;
 /**
  * Created by jrowley on 11/5/15.
  */
-public class LetterTile {
-    private int left;
-    private int top;
-    private int width;
-    private int height;
-
+public class LetterTile extends Tile {
     private int lastStableLeft;
     private int lastStableTop;
     private int desiredLeft;
@@ -26,36 +21,8 @@ public class LetterTile {
     private int yComponent;
     private double overallVelocity;
 
-    public int getLeft() {
-        return left;
-    }
-
-    public void setLeft(int left) {
-        this.left = left;
-    }
-
-    public int getTop() {
-        return top;
-    }
-
-    public void setTop(int top) {
-        this.top = top;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
     public void setHeight(int height) {
-        this.height = height;
+        super.setHeight(height);
         pixelsPerSecondToMove = height * PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO;
     }
 

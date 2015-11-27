@@ -26,7 +26,10 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
 
     public SupplyLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
+    }
 
+    @Override
+    protected void initializeTiles() {
         tilePool = new ObjectPool<>(new ObjectPool.PoolObjectFactory<LetterTile>() {
             @Override
             public LetterTile createObject() {
@@ -67,11 +70,6 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
         }
 
         super.update(portionOfSecond, touchEvents);
-    }
-
-    @Override
-    public void present(float portionOfASecond) {
-        presentTiles();
     }
 
     private LetterTile getNewTileForOnDeck() {

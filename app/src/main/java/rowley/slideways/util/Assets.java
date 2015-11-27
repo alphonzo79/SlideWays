@@ -18,4 +18,6 @@ public class Assets {
 
     public static final int PADDING_BASE = 20;
     public static int padding;
+
+    public static final int PLACEHOLDER_TILE_BACKGROUND_COLOR = 0x55ffffff;
 }
