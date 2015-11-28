@@ -9,7 +9,10 @@ import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.screens.game_screen_sections.BuilderRail;
+import rowley.slideways.screens.game_screen_sections.Score;
+import rowley.slideways.screens.game_screen_sections.Submitter;
 import rowley.slideways.screens.game_screen_sections.SupplyLetterRail;
+import rowley.slideways.screens.game_screen_sections.Timer;
 import rowley.slideways.util.Assets;
 import rowley.slideways.util.MovingLetterTileAttributes;
 
@@ -19,14 +22,16 @@ import rowley.slideways.util.MovingLetterTileAttributes;
 public class GameScreen extends ScreenController implements LetterReceiver {
     private boolean hasBackBeenPressed = false;
     private int screenWidth;
+    private int centerHoriz;
     private SupplyLetterRail supplyLetterRail;
     private BuilderRail builderRail;
     private int dividerLineY;
     private float dividerLineHeight;
     private final float DIVIDER_HEIGHT_BASE = 1.5f;
 
-    private final int TOP_COMPONENTS_HEIGHT_BASE = 60;
-    private int topComponentsHeight;
+    private Submitter submitter;
+    private Timer timer;
+    private Score score;
 
     private LetterTile detachedTile;
     private boolean isDetachedTileReturningHome = false;
@@ -42,9 +47,8 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         tileAttrs = MovingLetterTileAttributes.getInstance(gameController);
 
         screenWidth = gameController.getGraphics().getWidth();
+        centerHoriz = screenWidth / 2;
         int screenHeight = gameController.getGraphics().getHeight();
-
-        topComponentsHeight = (int) (TOP_COMPONENTS_HEIGHT_BASE * gameController.getGraphics().getScale());
 
         int supplyRailTop = screenHeight - tileAttrs.getTileDimension() - (Assets.padding * 2) - (Assets.padding / 2) - Assets.labelTextSize;
         int builderRailTop = supplyRailTop - tileAttrs.getTileDimension() - (Assets.padding * 2) - (Assets.padding / 2) - Assets.labelTextSize;
@@ -57,6 +61,15 @@ public class GameScreen extends ScreenController implements LetterReceiver {
 
         dividerLineY = supplyRailTop;
         dividerLineHeight = DIVIDER_HEIGHT_BASE * gameController.getGraphics().getScale();
+
+        int submitterWidth = screenWidth / 2;
+        int submitterLeft = centerHoriz - (submitterWidth / 2);
+        submitter = new Submitter(submitterLeft, 0, submitterWidth, builderRailTop, gameController);
+
+        timer = new Timer(0, 0, submitterLeft, builderRailTop, gameController);
+
+        int scoreLeft = submitterLeft + submitterWidth;
+        score = new Score(scoreLeft, 0, submitterLeft, builderRailTop, gameController);
     }
 
     @Override
@@ -116,6 +129,9 @@ public class GameScreen extends ScreenController implements LetterReceiver {
 
         builderRail.update(portionOfSecond, touchEvents);
         supplyLetterRail.update(portionOfSecond, touchEvents);
+        submitter.update(portionOfSecond, touchEvents);
+        timer.update(portionOfSecond, touchEvents);
+        score.update(portionOfSecond, touchEvents);
     }
 
     @Override
@@ -125,6 +141,9 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         builderRail.present(portionOfSecond);
         supplyLetterRail.present(portionOfSecond);
         gameController.getGraphics().drawLine(Assets.padding, dividerLineY, screenWidth - Assets.padding, dividerLineY, dividerLineHeight, Color.BLACK);
+        submitter.present(portionOfSecond);
+        timer.present(portionOfSecond);
+        score.present(portionOfSecond);
 
         if(detachedTile != null) {
             gameController.getGraphics().drawRect(detachedTile.getLeft(), detachedTile.getTop(), detachedTile.getWidth(), detachedTile.getHeight(), tileAttrs.getTileBackgroundColor());

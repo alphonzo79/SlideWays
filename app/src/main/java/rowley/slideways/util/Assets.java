@@ -24,10 +24,10 @@ public class Assets {
     public static final int LABEL_TEXT_SIZE_BASE = 14;
     public static int labelTextSize;
 
-    public static final int TIME_TEXT_SIZE_BASE = 24;
+    public static final int TIME_TEXT_SIZE_BASE = 32;
     public static int timeTextSize;
 
-    public static final int SCORE_TEXT_SIZE_BASE = 24;
+    public static final int SCORE_TEXT_SIZE_BASE = 32;
     public static int scoreTextSize;
 
     public static final int TRANSLUCENT_WHITE = 0xaaffffff;
