@@ -46,8 +46,8 @@ public class GameScreen extends ScreenController implements LetterReceiver {
 
         topComponentsHeight = (int) (TOP_COMPONENTS_HEIGHT_BASE * gameController.getGraphics().getScale());
 
-        int supplyRailTop = screenHeight - tileAttrs.getTileDimension() - (Assets.padding * 2);
-        int builderRailTop = supplyRailTop - tileAttrs.getTileDimension() - (Assets.padding * 2);
+        int supplyRailTop = screenHeight - tileAttrs.getTileDimension() - (Assets.padding * 2) - (Assets.padding / 2) - Assets.labelTextSize;
+        int builderRailTop = supplyRailTop - tileAttrs.getTileDimension() - (Assets.padding * 2) - (Assets.padding / 2) - Assets.labelTextSize;
 
         builderRail = new BuilderRail(0, builderRailTop, screenWidth, supplyRailTop - builderRailTop, gameController);
         builderRail.setPickedUpLetterReceiver(this);

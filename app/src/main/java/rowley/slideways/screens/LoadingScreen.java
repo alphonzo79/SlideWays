@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import jrowley.gamecontrollib.game_control.BaseGameControllerActivity;
 import jrowley.gamecontrollib.game_control.GameController;
+import jrowley.gamecontrollib.graphics.Graphics;
 import jrowley.gamecontrollib.screen_control.ScreenController;
 import rowley.slideways.R;
 import rowley.slideways.SlideWaysApp;
@@ -56,7 +57,7 @@ public class LoadingScreen extends ScreenController {
     @Inject
     WordScorer wordScorer;
 
-    public LoadingScreen(BaseGameControllerActivity gameController) {
+    public LoadingScreen(final BaseGameControllerActivity gameController) {
         super(gameController);
 
         int screenWidth = gameController.getGraphics().getWidth();
@@ -87,7 +88,11 @@ public class LoadingScreen extends ScreenController {
                 Assets.letterManager = letterManager;
                 Assets.wordScorer = wordScorer;
 
-                Assets.padding = (int) (Assets.PADDING_BASE * LoadingScreen.this.gameController.getGraphics().getScale());
+                float scale = LoadingScreen.this.gameController.getGraphics().getScale();
+                Assets.padding = (int) (Assets.PADDING_BASE * scale);
+                Assets.labelTextSize = (int) (Assets.LABEL_TEXT_SIZE_BASE * scale);
+                Assets.timeTextSize = (int) (Assets.TIME_TEXT_SIZE_BASE * scale);
+                Assets.scoreTextSize = (int) (Assets.SCORE_TEXT_SIZE_BASE * scale);
 
                 subscriber.onCompleted();
             }

@@ -5,4 +5,6 @@
     <string name="new_game">New Game</string>
     <string name="continue_game">Continue</string>
     <string name="high_scores">High Scores</string>
+    <string name="supply_rail">Supply Rail</string>
+    <string name="builder_rail">Builder Rail</string>
 </resources>

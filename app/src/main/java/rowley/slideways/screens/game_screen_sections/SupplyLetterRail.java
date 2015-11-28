@@ -9,6 +9,7 @@ import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.pooling.ObjectPool;
 import jrowley.gamecontrollib.screen_control.ScreenSectionController;
+import rowley.slideways.R;
 import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.screens.DetachedTileMonitor;
 import rowley.slideways.screens.LetterReceiver;
@@ -257,5 +258,10 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
     @Override
     protected int getRightmostObjectLeftEdge() {
         return letterTiles[getTileCount() - 1].getLeft();
+    }
+
+    @Override
+    protected String getLabel() {
+        return gameController.getStringResource(R.string.supply_rail);
     }
 }

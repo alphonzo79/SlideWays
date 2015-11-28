@@ -8,6 +8,7 @@ import java.util.List;
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.pooling.ObjectPool;
+import rowley.slideways.R;
 import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.data.entity.Tile;
 import rowley.slideways.util.Assets;
@@ -127,5 +128,10 @@ public class BuilderRail extends SlidingLetterRailBase {
             }
         }
         super.presentTiles();
+    }
+
+    @Override
+    protected String getLabel() {
+        return gameController.getStringResource(R.string.builder_rail);
     }
 }

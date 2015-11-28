@@ -1,5 +1,10 @@
 package rowley.slideways.screens.game_screen_sections;
 
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.text.TextUtils;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,6 +43,12 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
     protected final int LETTER_PICKUP_OFFSET_BASE = 10;
     protected final int letterPickupOffset;
 
+    protected String label;
+    private int centerWidth;
+    private int labelBaseline;
+    private final Typeface LABEL_TYPEFACE = Typeface.DEFAULT;
+    private final Paint.Align LABEL_ALIGNMENT = Paint.Align.CENTER;
+
     public SlidingLetterRailBase(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
 
@@ -50,6 +61,10 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
         tilesToAdjust = new boolean[getTileCount()];
 
         letterPickupOffset = (int) (LETTER_PICKUP_OFFSET_BASE * gameController.getGraphics().getScale());
+
+        label = getLabel();
+        centerWidth = sectionWidth / 2 + sectionLeft;
+        labelBaseline = sectionTop + sectionHeight - Assets.padding;
 
         initializeTiles();
     }
@@ -211,6 +226,10 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
                         tileAttrs.getLetterTextSize(), tileAttrs.getLetterTypeface(), tileAttrs.getLetterAlignment());
             }
         }
+
+        if(!TextUtils.isEmpty(label)) {
+            gameController.getGraphics().writeText(label, centerWidth, labelBaseline, Assets.TRANSLUCENT_WHITE, Assets.labelTextSize, LABEL_TYPEFACE, LABEL_ALIGNMENT);
+        }
     }
 
     @Override
@@ -236,6 +255,7 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
     protected abstract void initializeTiles();
     protected abstract int getLeftmostObjectLeftEdge();
     protected abstract int getRightmostObjectLeftEdge();
+    protected abstract String getLabel();
 
     protected enum RailState {
         RESTING, TOUCH_INITIATED, SLIDING, FLUNG, LETTER_SELECTED, ADJUSTING
