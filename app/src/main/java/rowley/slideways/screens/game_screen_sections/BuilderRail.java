@@ -1,6 +1,12 @@
 package rowley.slideways.screens.game_screen_sections;
 
+import android.util.Log;
+
+import java.util.Arrays;
+import java.util.List;
+
 import jrowley.gamecontrollib.game_control.GameController;
+import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.pooling.ObjectPool;
 import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.data.entity.Tile;
@@ -26,6 +32,8 @@ public class BuilderRail extends SlidingLetterRailBase {
             placeHolders[i] = new Tile();
             placeHolders[i].setLeft(currentX);
             placeHolders[i].setTop(sectionTop + Assets.padding);
+            placeHolders[i].setHeight(tileAttrs.getTileDimension());
+            placeHolders[i].setWidth(tileAttrs.getTileDimension());
 
             currentX += (tileAttrs.getTileDimension() + Assets.padding);
         }
@@ -69,8 +77,45 @@ public class BuilderRail extends SlidingLetterRailBase {
 
     @Override
     public boolean tryReceiveControlOfLetter(LetterTile letter, int lastTouchX, int lastTouchY) {
-        // TODO: 11/26/15
+        //first, can we consider accepting it?
+        if(letter.getTop() < sectionTop + sectionHeight - Assets.padding
+                && letter.getTop() + letter.getHeight() > sectionTop + Assets.padding) {
+            //We're inside the vertical bounds of our letters, let's figure out where it needs to go
+            int targetIndex = findTargetIndexForMovingTile(letter);
+
+            if(targetIndex != -1) {
+                letter.setDesiredPosition(placeHolders[targetIndex].getLeft(), placeHolders[targetIndex].getTop());
+
+                letterTiles[targetIndex] = letter;
+                tilesToAdjust[targetIndex] = true;
+                railState = RailState.ADJUSTING;
+                targetRailStateAfterAdjustment = RailState.RESTING;
+                selectedLetterIndex = -1;
+
+                return true;
+            }
+        }
         return false;
+    }
+
+    private int findTargetIndexForMovingTile(LetterTile movingTile) {
+        int targetIndex = selectedLetterIndex;
+        for(int i = 0; i < placeHolders.length; i++) {
+            if(i == selectedLetterIndex) {
+                continue;
+            }
+
+            if((movingTile.getLeft() > placeHolders[i].getLeft()
+                    && movingTile.getLeft() < placeHolders[i].getLeft() + (placeHolders[i].getWidth() / 2))
+                    || (movingTile.getLeft() + movingTile.getWidth() < placeHolders[i].getLeft() + placeHolders[i].getWidth()
+                    && movingTile.getLeft() + movingTile.getWidth() > placeHolders[i].getLeft() + (placeHolders[i].getWidth() / 2))
+                    && letterTiles[i] == null) {
+                targetIndex = i;
+                break;
+            }
+        }
+
+        return targetIndex;
     }
 
     @Override

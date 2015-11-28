@@ -1,5 +1,6 @@
 package rowley.slideways.screens.game_screen_sections;
 
+import java.util.Arrays;
 import java.util.List;
 
 import jrowley.gamecontrollib.game_control.GameController;
@@ -16,6 +17,7 @@ import rowley.slideways.util.MovingLetterTileAttributes;
  */
 public abstract class SlidingLetterRailBase extends ScreenSectionController implements DetachedTileMonitor, LetterReceiver {
     protected LetterTile[] letterTiles;
+    protected boolean[] tilesToAdjust;
 
     protected MovingLetterTileAttributes tileAttrs;
 
@@ -45,6 +47,7 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
         lastLetterLeftMin = sectionLeft + sectionWidth - Assets.padding - tileAttrs.getTileDimension();
 
         letterTiles = new LetterTile[getTileCount()];
+        tilesToAdjust = new boolean[getTileCount()];
 
         letterPickupOffset = (int) (LETTER_PICKUP_OFFSET_BASE * gameController.getGraphics().getScale());
 
@@ -53,6 +56,20 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
 
     @Override
     public void update(float portionOfSecond, List<TouchEvent> touchEvents) {
+        if(railState == RailState.ADJUSTING) {
+            boolean doneAdjusting = true;
+            for(int i = 0; i < tilesToAdjust.length; i++) {
+                if(tilesToAdjust[i] && !letterTiles[i].progressTowardDesiredPosition(portionOfSecond)) {
+                    doneAdjusting = false;
+                }
+            }
+
+            if(doneAdjusting) {
+                Arrays.fill(tilesToAdjust, false);
+                railState = targetRailStateAfterAdjustment;
+            }
+        }
+
         if(railState == RailState.FLUNG) {
             int offset = (int) (flingVelocity * portionOfSecond);
             offset = adjustCalculatedOffsetToStayWithinBounds(offset);

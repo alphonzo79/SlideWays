@@ -90,8 +90,10 @@ public class GameScreen extends ScreenController implements LetterReceiver {
                         lastY = event.getY();
 
                         if(builderRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
+                            supplyLetterRail.onDetachedTileAcceptedByOther();
                             detachedTile = null;
                         } else if (supplyLetterRail.tryReceiveControlOfLetter(detachedTile, lastX, lastY)) {
+                            builderRail.onDetachedTileAcceptedByOther();
                             detachedTile = null;
                         } else {
                             isDetachedTileReturningHome = true;
@@ -100,8 +102,12 @@ public class GameScreen extends ScreenController implements LetterReceiver {
                 }
             } else {
                 if(detachedTile.progressTowardLastStablePosition(portionOfSecond)) {
-                    // TODO: 11/14/15 What if it's not accepted?
-                    supplyLetterRail.tryReceiveControlOfLetter(detachedTile, detachedTile.getLeft(), detachedTile.getTop());
+                    // TODO: 11/14/15 What if it's not accepted? Does the letter belong to the supply or the builder?
+                    if(supplyLetterRail.tryReceiveControlOfLetter(detachedTile, detachedTile.getLeft(), detachedTile.getTop())) {
+                        builderRail.onDetachedTileAcceptedByOther();
+                    } else if(builderRail.tryReceiveControlOfLetter(detachedTile, detachedTile.getLeft(), detachedTile.getTop())) {
+                        supplyLetterRail.onDetachedTileAcceptedByOther();
+                    }
                     detachedTile = null;
                     isDetachedTileReturningHome = false;
                 }

@@ -1,5 +1,7 @@
 package rowley.slideways.screens.game_screen_sections;
 
+import android.util.Log;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,8 +23,6 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
     private LetterTile[] onDeckTiles;
 
     private final int TILE_COUNT = 15;
-
-    private boolean[] tilesToAdjust = new boolean[TILE_COUNT];
 
     public SupplyLetterRail(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -51,25 +51,6 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
             letterTiles[i] = getTileFromOnDeck(currentX);
             currentX += (tileAttrs.getTileDimension() + Assets.padding);
         }
-    }
-
-    @Override
-    public void update(float portionOfSecond, List<TouchEvent> touchEvents) {
-        if(railState == RailState.ADJUSTING) {
-            boolean doneAdjusting = true;
-            for(int i = 0; i < tilesToAdjust.length; i++) {
-                if(tilesToAdjust[i] && !letterTiles[i].progressTowardDesiredPosition(portionOfSecond)) {
-                    doneAdjusting = false;
-                }
-            }
-
-            if(doneAdjusting) {
-                Arrays.fill(tilesToAdjust, false);
-                railState = targetRailStateAfterAdjustment;
-            }
-        }
-
-        super.update(portionOfSecond, touchEvents);
     }
 
     private LetterTile getNewTileForOnDeck() {
@@ -107,6 +88,7 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
             if(railState != RailState.ADJUSTING) {
                 int targetIndex = findTargetIndexForMovingTile(tile);
 
+                Log.d("JAR", "Target Index: " + targetIndex);
                 if(railState == RailState.LETTER_SELECTED) {
                     //Reset the selected state to match the new state if needed
                     if(targetIndex < selectedLetterIndex) {
@@ -128,12 +110,20 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
                     }
                     //If target matches selected, then do nothing
                 } else {
-                    pushTileBackIntoOnDeck(letterTiles[letterTiles.length - 1]);
-                    requestTilesShiftRight(targetIndex, letterTiles.length - 1);
-                    selectedLetterIndex = targetIndex;
+                    //incoming tile. Selected index will be -1 until we find a valid cell for it to go in.
+                    //If the incoming tile is right between two cells, it won't find a home and the target
+                    //index will be -1. So we need to do another check here
+                    if(targetIndex != -1) {
+                        Log.d("JAR", "Gonna take a new tile");
+                        pushTileBackIntoOnDeck(letterTiles[letterTiles.length - 1]);
+                        requestTilesShiftRight(targetIndex, letterTiles.length - 1);
+                        tile.setLastStablePosition(letterTiles[targetIndex + 1].getDesiredLeft() - tile.getWidth() - Assets.padding,
+                                letterTiles[targetIndex + 1].getDesiredTop());
+                        selectedLetterIndex = targetIndex;
 
-                    targetRailStateAfterAdjustment = railState;
-                    railState = RailState.ADJUSTING;
+                        targetRailStateAfterAdjustment = RailState.LETTER_SELECTED;
+                        railState = RailState.ADJUSTING;
+                    }
                 }
             }
 
@@ -210,6 +200,7 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
      */
     private void requestTilesShiftRight(int fromIndex, int toIndex) {
         for(int i = toIndex; i > fromIndex; i--) {
+            Log.d("JAR", "Shifting: " + i);
             letterTiles[i] = letterTiles[i - 1];
             letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() + letterTiles[i].getWidth() + Assets.padding, letterTiles[i].getTop());
             letterTiles[i - 1] = null;
@@ -234,7 +225,7 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
 
     private int findTargetIndexForMovingTile(LetterTile movingTile) {
         int targetIndex = selectedLetterIndex;
-        for(int i = 0; i < letterTiles.length - 1; i++) {
+        for(int i = 0; i < letterTiles.length; i++) {
             if(i == selectedLetterIndex) {
                 continue;
             }
@@ -244,10 +235,12 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
                     || (movingTile.getLeft() + movingTile.getWidth() < letterTiles[i].getLeft() + letterTiles[i].getWidth()
                     && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))) {
                 targetIndex = i;
+                Log.d("JAR", "Set to " + i);
                 break;
             }
         }
 
+        Log.d("JAR", "Returning " + targetIndex);
         return targetIndex;
     }
 
