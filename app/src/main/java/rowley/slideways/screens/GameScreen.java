@@ -70,6 +70,11 @@ public class GameScreen extends ScreenController implements LetterReceiver {
 
         int scoreLeft = submitterLeft + submitterWidth;
         score = new Score(scoreLeft, 0, submitterLeft, builderRailTop, gameController);
+
+        submitter.addRailLockListener(supplyLetterRail);
+        submitter.addRailLockListener(builderRail);
+        submitter.setSubmitPressedListener(builderRail);
+        submitter.setWordScoredListener(score);
     }
 
     @Override

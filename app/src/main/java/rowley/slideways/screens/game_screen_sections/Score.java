@@ -9,7 +9,7 @@ import jrowley.gamecontrollib.screen_control.ScreenSectionController;
 /**
  * Created by joe on 11/27/15.
  */
-public class Score extends ScreenSectionController {
+public class Score extends ScreenSectionController implements Submitter.OnWordScoredListener {
     public Score(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
     }
@@ -38,5 +38,10 @@ public class Score extends ScreenSectionController {
     @Override
     public void dispose() {
 
+    }
+
+    @Override
+    public void onWordScored(int score) {
+        // TODO: 11/29/15  
     }
 }

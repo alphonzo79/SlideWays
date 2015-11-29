@@ -16,7 +16,7 @@ import rowley.slideways.util.Assets;
 /**
  * Created by joe on 11/26/15.
  */
-public class BuilderRail extends SlidingLetterRailBase {
+public class BuilderRail extends SlidingLetterRailBase implements Submitter.OnSubmitPressedListener {
     private Tile[] placeHolders;
 
     private final int TILE_COUNT = 15;
@@ -133,5 +133,10 @@ public class BuilderRail extends SlidingLetterRailBase {
     @Override
     protected String getLabel() {
         return gameController.getStringResource(R.string.builder_rail);
+    }
+
+    @Override
+    public LetterTile[] takeControlOfBuiltTiles() {
+        return letterTiles;
     }
 }

@@ -20,7 +20,8 @@ import rowley.slideways.util.MovingLetterTileAttributes;
 /**
  * Created by joe on 11/25/15.
  */
-public abstract class SlidingLetterRailBase extends ScreenSectionController implements DetachedTileMonitor, LetterReceiver {
+public abstract class SlidingLetterRailBase extends ScreenSectionController implements DetachedTileMonitor,
+        LetterReceiver, Submitter.OnRailLockListener {
     protected LetterTile[] letterTiles;
     protected boolean[] tilesToAdjust;
 
@@ -71,82 +72,84 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
 
     @Override
     public void update(float portionOfSecond, List<TouchEvent> touchEvents) {
-        if(railState == RailState.ADJUSTING) {
-            boolean doneAdjusting = true;
-            for(int i = 0; i < tilesToAdjust.length; i++) {
-                if(tilesToAdjust[i] && !letterTiles[i].progressTowardDesiredPosition(portionOfSecond)) {
-                    doneAdjusting = false;
+        if(railState != RailState.LOCKED) {
+            if (railState == RailState.ADJUSTING) {
+                boolean doneAdjusting = true;
+                for (int i = 0; i < tilesToAdjust.length; i++) {
+                    if (tilesToAdjust[i] && !letterTiles[i].progressTowardDesiredPosition(portionOfSecond)) {
+                        doneAdjusting = false;
+                    }
+                }
+
+                if (doneAdjusting) {
+                    Arrays.fill(tilesToAdjust, false);
+                    railState = targetRailStateAfterAdjustment;
                 }
             }
 
-            if(doneAdjusting) {
-                Arrays.fill(tilesToAdjust, false);
-                railState = targetRailStateAfterAdjustment;
-            }
-        }
+            if (railState == RailState.FLUNG) {
+                int offset = (int) (flingVelocity * portionOfSecond);
+                offset = adjustCalculatedOffsetToStayWithinBounds(offset);
+                updateTilesWithOffset(offset);
+                flingVelocity = flingVelocity * FLING_FRICTION;
 
-        if(railState == RailState.FLUNG) {
-            int offset = (int) (flingVelocity * portionOfSecond);
-            offset = adjustCalculatedOffsetToStayWithinBounds(offset);
-            updateTilesWithOffset(offset);
-            flingVelocity = flingVelocity * FLING_FRICTION;
-
-            if(flingVelocity < 5 && flingVelocity > -5) {
-                railState = RailState.RESTING;
-            }
-        }
-
-        timeSinceLastTouchEvent += portionOfSecond;
-
-        if(timeSinceLastTouchEvent > LONG_TOUCH_THRESHOLD && (railState == RailState.TOUCH_INITIATED || railState == RailState.SLIDING)) {
-            tryToPickUpLetter();
-        }
-
-        int lastTouchOffset = 0;
-        for(TouchEvent event : touchEvents) {
-            if(event.getType() == TouchEvent.TOUCH_DOWN && railState == RailState.RESTING && touchIsInsideRail(event)) {
-                railState = RailState.TOUCH_INITIATED;
-
-                lastX = event.getX();
-                lastY = event.getY();
-
-                timeSinceLastTouchEvent = 0;
-            }
-
-            if(event.getType() == TouchEvent.TOUCH_DRAGGED) {
-                if(railState == RailState.TOUCH_INITIATED || railState == RailState.SLIDING) {
-                    if (railState != RailState.SLIDING) {
-                        railState = RailState.SLIDING;
-                    }
-
-                    lastTouchOffset = getRailSlideOffset(event);
-                    updateTilesWithOffset(lastTouchOffset);
-                }
-
-                //some devices register drags even if there is no change. Others don't register a drag without change
-                if(lastTouchOffset != 0) {
-                    timeSinceLastTouchEvent = 0;
-                }
-            }
-
-            if(event.getType() == TouchEvent.TOUCH_UP) {
-                if(railState == RailState.SLIDING) {
-                    //Generally an up is accompanied by a drag first. But what it if isn't?
-                    if (lastTouchOffset == 0) {
-                        lastTouchOffset = getRailSlideOffset(event);
-                    }
-                    if (lastTouchOffset != 0) {
-                        railState = RailState.FLUNG;
-                        updateTilesWithOffset(lastTouchOffset);
-                        flingVelocity = lastTouchOffset / portionOfSecond;
-                    } else {
-                        railState = RailState.RESTING;
-                    }
-                } else if(railState != RailState.LETTER_SELECTED && railState != RailState.ADJUSTING) {
+                if (flingVelocity < 5 && flingVelocity > -5) {
                     railState = RailState.RESTING;
                 }
+            }
 
-                timeSinceLastTouchEvent = 0;
+            timeSinceLastTouchEvent += portionOfSecond;
+
+            if (timeSinceLastTouchEvent > LONG_TOUCH_THRESHOLD && (railState == RailState.TOUCH_INITIATED || railState == RailState.SLIDING)) {
+                tryToPickUpLetter();
+            }
+
+            int lastTouchOffset = 0;
+            for (TouchEvent event : touchEvents) {
+                if (event.getType() == TouchEvent.TOUCH_DOWN && railState == RailState.RESTING && touchIsInsideRail(event)) {
+                    railState = RailState.TOUCH_INITIATED;
+
+                    lastX = event.getX();
+                    lastY = event.getY();
+
+                    timeSinceLastTouchEvent = 0;
+                }
+
+                if (event.getType() == TouchEvent.TOUCH_DRAGGED) {
+                    if (railState == RailState.TOUCH_INITIATED || railState == RailState.SLIDING) {
+                        if (railState != RailState.SLIDING) {
+                            railState = RailState.SLIDING;
+                        }
+
+                        lastTouchOffset = getRailSlideOffset(event);
+                        updateTilesWithOffset(lastTouchOffset);
+                    }
+
+                    //some devices register drags even if there is no change. Others don't register a drag without change
+                    if (lastTouchOffset != 0) {
+                        timeSinceLastTouchEvent = 0;
+                    }
+                }
+
+                if (event.getType() == TouchEvent.TOUCH_UP) {
+                    if (railState == RailState.SLIDING) {
+                        //Generally an up is accompanied by a drag first. But what it if isn't?
+                        if (lastTouchOffset == 0) {
+                            lastTouchOffset = getRailSlideOffset(event);
+                        }
+                        if (lastTouchOffset != 0) {
+                            railState = RailState.FLUNG;
+                            updateTilesWithOffset(lastTouchOffset);
+                            flingVelocity = lastTouchOffset / portionOfSecond;
+                        } else {
+                            railState = RailState.RESTING;
+                        }
+                    } else if (railState != RailState.LETTER_SELECTED && railState != RailState.ADJUSTING) {
+                        railState = RailState.RESTING;
+                    }
+
+                    timeSinceLastTouchEvent = 0;
+                }
             }
         }
     }
@@ -251,6 +254,17 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
         this.pickedUpLetterReceiver = receiver;
     }
 
+    @Override
+    public void lock() {
+        targetRailStateAfterAdjustment = railState;
+        railState = RailState.LOCKED;
+    }
+
+    @Override
+    public void unlock() {
+        railState = targetRailStateAfterAdjustment;
+    }
+
     protected abstract int getTileCount();
     protected abstract void initializeTiles();
     protected abstract int getLeftmostObjectLeftEdge();
@@ -258,6 +272,6 @@ public abstract class SlidingLetterRailBase extends ScreenSectionController impl
     protected abstract String getLabel();
 
     protected enum RailState {
-        RESTING, TOUCH_INITIATED, SLIDING, FLUNG, LETTER_SELECTED, ADJUSTING
+        RESTING, TOUCH_INITIATED, SLIDING, FLUNG, LETTER_SELECTED, ADJUSTING, LOCKED
     }
 }
