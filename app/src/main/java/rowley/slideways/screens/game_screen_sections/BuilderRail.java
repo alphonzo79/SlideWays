@@ -1,23 +1,16 @@
 package rowley.slideways.screens.game_screen_sections;
 
-import android.util.Log;
-
-import java.util.Arrays;
-import java.util.List;
-
 import jrowley.gamecontrollib.game_control.GameController;
-import jrowley.gamecontrollib.input.TouchEvent;
-import jrowley.gamecontrollib.pooling.ObjectPool;
 import rowley.slideways.R;
 import rowley.slideways.data.entity.LetterTile;
-import rowley.slideways.data.entity.Tile;
+import rowley.slideways.data.entity.MovableEntity;
 import rowley.slideways.util.Assets;
 
 /**
  * Created by joe on 11/26/15.
  */
 public class BuilderRail extends SlidingLetterRailBase implements Submitter.OnSubmitPressedListener {
-    private Tile[] placeHolders;
+    private MovableEntity[] placeHolders;
 
     private final int TILE_COUNT = 15;
 
@@ -27,10 +20,10 @@ public class BuilderRail extends SlidingLetterRailBase implements Submitter.OnSu
 
     @Override
     protected void initializeTiles() {
-        placeHolders = new Tile[TILE_COUNT];
+        placeHolders = new MovableEntity[TILE_COUNT];
         int currentX = firstLetterLeftMax;
         for(int i = 0; i < placeHolders.length; i++) {
-            placeHolders[i] = new Tile();
+            placeHolders[i] = new MovableEntity();
             placeHolders[i].setLeft(currentX);
             placeHolders[i].setTop(sectionTop + Assets.padding);
             placeHolders[i].setHeight(tileAttrs.getTileDimension());
@@ -48,7 +41,7 @@ public class BuilderRail extends SlidingLetterRailBase implements Submitter.OnSu
     @Override
     protected void updateTilesWithOffset(int offset) {
         super.updateTilesWithOffset(offset);
-        for(Tile tile : placeHolders) {
+        for(MovableEntity tile : placeHolders) {
             tile.setLeft(tile.getLeft() + offset);
         }
     }
@@ -121,7 +114,7 @@ public class BuilderRail extends SlidingLetterRailBase implements Submitter.OnSu
 
     @Override
     protected void presentTiles() {
-        for(Tile tile : placeHolders) {
+        for(MovableEntity tile : placeHolders) {
             if(tile != null) {
                 gameController.getGraphics().drawRect(tile.getLeft(), tile.getTop(), tileAttrs.getTileDimension(),
                         tileAttrs.getTileDimension(), Assets.PLACEHOLDER_TILE_BACKGROUND_COLOR);

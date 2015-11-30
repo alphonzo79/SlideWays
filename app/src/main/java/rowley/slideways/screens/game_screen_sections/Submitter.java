@@ -14,6 +14,7 @@ import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.screen_control.ScreenSectionController;
 import rowley.slideways.R;
 import rowley.slideways.data.entity.LetterTile;
+import rowley.slideways.data.entity.MovableEntity;
 import rowley.slideways.screens.GameScreen;
 import rowley.slideways.screens.HighScoresScreen;
 import rowley.slideways.util.Assets;
@@ -100,6 +101,7 @@ public class Submitter extends ScreenSectionController {
                             if(tile != null) {
                                 tile.setLastStablePosition(tile.getLeft(), tile.getTop());
                                 tile.setDesiredPosition(desiredTileLeft, 0);
+                                tile.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * .65));
                             }
                         }
                         sectionState = SectionState.SUBMITTING;
@@ -152,6 +154,7 @@ public class Submitter extends ScreenSectionController {
                 for(OnRailLockListener listener : railLockListeners) {
                     listener.unlock();
                 }
+                resetTileVelocities();
                 sectionState = SectionState.DEFAULT;
             }
         }
@@ -218,7 +221,7 @@ public class Submitter extends ScreenSectionController {
         }
 
         if(!valid) {
-            sectionState = SectionState.RETURNING;
+            returnTiles();
         } else {
             wordToSubmit = new char[wordEndIndexExclusive - wordStartIndexInclusive];
             index = 0;
@@ -242,7 +245,24 @@ public class Submitter extends ScreenSectionController {
                 }
                 sectionState = SectionState.DEFAULT;
             } else {
-                sectionState = SectionState.RETURNING;
+                returnTiles();
+            }
+        }
+    }
+
+    private void returnTiles() {
+        for(MovableEntity tile : submittedTiles) {
+            if(tile != null) {
+                tile.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * .4));
+            }
+        }
+        sectionState = SectionState.RETURNING;
+    }
+
+    private void resetTileVelocities() {
+        for(MovableEntity tile : submittedTiles) {
+            if(tile != null) {
+                tile.overrideProgressPixelsPerSecondToHeightRatio(MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO);
             }
         }
     }
