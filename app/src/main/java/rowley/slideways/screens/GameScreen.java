@@ -143,12 +143,12 @@ public class GameScreen extends ScreenController implements LetterReceiver {
     public void present(float portionOfSecond) {
         gameController.getGraphics().clear(Color.RED + 45);
 
-        builderRail.present(portionOfSecond);
-        supplyLetterRail.present(portionOfSecond);
-        gameController.getGraphics().drawLine(Assets.padding, dividerLineY, screenWidth - Assets.padding, dividerLineY, dividerLineHeight, Color.BLACK);
         submitter.present(portionOfSecond);
         timer.present(portionOfSecond);
         score.present(portionOfSecond);
+        builderRail.present(portionOfSecond);
+        supplyLetterRail.present(portionOfSecond);
+        gameController.getGraphics().drawLine(Assets.padding, dividerLineY, screenWidth - Assets.padding, dividerLineY, dividerLineHeight, Color.BLACK);
 
         if(detachedTile != null) {
             gameController.getGraphics().drawRect(detachedTile.getLeft(), detachedTile.getTop(), detachedTile.getWidth(), detachedTile.getHeight(), tileAttrs.getTileBackgroundColor());

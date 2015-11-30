@@ -19,6 +19,7 @@ public class EnglishWordScorerTest {
         Assert.assertEquals(49, scorer.getScoreForWord(new char[]{'q', 'u', 'e', 'e', 'n'}));
         Assert.assertEquals(70, scorer.getScoreForWord(new char[]{'q', 'u', 'e', 'e', 'n', 's'}));
         Assert.assertEquals(5, scorer.getScoreForWord(new char[]{'a'}));
+        Assert.assertEquals(7, scorer.getScoreForWord(new char[]{'i'}));
         Assert.assertEquals(12, scorer.getScoreForWord(new char[]{'a', 's'}));
         Assert.assertEquals(23, scorer.getScoreForWord(new char[]{'g', 'a', 's'}));
         Assert.assertEquals(211, scorer.getScoreForWord(new char[]{'m', 'a', 'd', 'a', 'g', 'a', 's', 'c', 'a', 'r'}));

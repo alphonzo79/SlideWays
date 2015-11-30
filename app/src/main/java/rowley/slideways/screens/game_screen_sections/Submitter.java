@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +17,14 @@ import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.screens.GameScreen;
 import rowley.slideways.screens.HighScoresScreen;
 import rowley.slideways.util.Assets;
+import rowley.slideways.util.MovingLetterTileAttributes;
 
 /**
  * Created by joe on 11/27/15.
  */
 public class Submitter extends ScreenSectionController {
+    private int sectionCenter;
+
     private int buttonLeft;
     private int buttonTop;
     private int buttonWidth;
@@ -49,6 +53,11 @@ public class Submitter extends ScreenSectionController {
     private OnWordScoredListener wordScoredListener;
 
     private LetterTile[] submittedTiles;
+    private int desiredTileLeft;
+    private MovingLetterTileAttributes tileAttrs;
+    private char[] wordToSubmit;
+
+    private SectionState sectionState = SectionState.DEFAULT;
 
     public Submitter(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -67,6 +76,11 @@ public class Submitter extends ScreenSectionController {
 
         buttonTextBaseline = buttonTop + textFromTopOffset;
         buttonCenter = buttonLeft + (buttonWidth / 2);
+
+        sectionCenter = sectionLeft + (sectionWidth / 2);
+
+        tileAttrs = MovingLetterTileAttributes.getInstance(gameController);
+        desiredTileLeft = sectionCenter - (tileAttrs.getTileDimension() / 2);
     }
 
     @Override
@@ -82,7 +96,13 @@ public class Submitter extends ScreenSectionController {
                             listener.lock();
                         }
                         submittedTiles = submitPressedListener.takeControlOfBuiltTiles();
-                        // TODO: 11/28/15 get the tiles
+                        for(LetterTile tile : submittedTiles) {
+                            if(tile != null) {
+                                tile.setLastStablePosition(tile.getLeft(), tile.getTop());
+                                tile.setDesiredPosition(desiredTileLeft, 0);
+                            }
+                        }
+                        sectionState = SectionState.SUBMITTING;
                         continue;
                     }
                 }
@@ -106,6 +126,35 @@ public class Submitter extends ScreenSectionController {
             }
 
         }
+
+        if(sectionState == SectionState.SUBMITTING) {
+            boolean moveComplete = true;
+            for(LetterTile tile : submittedTiles) {
+                if(tile != null && !tile.progressTowardDesiredPosition(portionOfSecond)) {
+                    moveComplete = false;
+                }
+            }
+
+            if(moveComplete) {
+                submitTilesForScore();
+            }
+        }
+
+        if(sectionState == SectionState.RETURNING) {
+            boolean moveComplete = true;
+            for(LetterTile tile : submittedTiles) {
+                if(tile != null && !tile.progressTowardLastStablePosition(portionOfSecond)) {
+                    moveComplete = false;
+                }
+            }
+
+            if(moveComplete) {
+                for(OnRailLockListener listener : railLockListeners) {
+                    listener.unlock();
+                }
+                sectionState = SectionState.DEFAULT;
+            }
+        }
     }
 
     @Override
@@ -113,7 +162,8 @@ public class Submitter extends ScreenSectionController {
         int buttonColor = buttonPressed ? BUTTON_COLOR_PRESSED : BUTTON_COLOR_STANDARD;
         gameController.getGraphics().drawRect(buttonLeft, buttonTop, buttonWidth, buttonHeight, buttonColor);
         gameController.getGraphics().writeText(buttonText, buttonCenter, buttonTextBaseline, Color.WHITE, buttonTextSize, BUTTON_TYPEFACE, BUTTON_ALIGNMENT);
-        // TODO: 11/27/15
+
+        //No need to draw tiles because we let the builder rail continue to draw -- we just handle moving them
     }
 
     @Override
@@ -143,6 +193,60 @@ public class Submitter extends ScreenSectionController {
         this.wordScoredListener = wordScoredListener;
     }
 
+    private void submitTilesForScore() {
+        //First, validate.
+        boolean charFound = false;
+        boolean gapFound = false;
+        boolean valid = false;
+        int wordStartIndexInclusive = 0;
+        int wordEndIndexExclusive = 0;
+        int index = 0;
+        for(; index < submittedTiles.length; index++) {
+            if(submittedTiles[index] != null) {
+                if(!charFound) {
+                    wordStartIndexInclusive = index;
+                    charFound = true;
+                    valid = true;
+                } else if(gapFound) {
+                    //We have recognized a gap between characters -- a break in the word
+                    valid = false;
+                }
+            } else if(charFound && !gapFound) {
+                wordEndIndexExclusive = index;
+                gapFound = true;
+            }
+        }
+
+        if(!valid) {
+            sectionState = SectionState.RETURNING;
+        } else {
+            wordToSubmit = new char[wordEndIndexExclusive - wordStartIndexInclusive];
+            index = 0;
+            for(; index < wordToSubmit.length; index++) {
+                wordToSubmit[index] = submittedTiles[index + wordStartIndexInclusive].getLetter();
+            }
+
+            int score = 0;
+
+            if(Assets.wordTrie.isKnownWord(wordToSubmit)) {
+                score = Assets.wordScorer.getScoreForWord(wordToSubmit);
+            }
+            if(score > 0) {
+                // TODO: 11/29/15
+                for(index = 0; index < submittedTiles.length; index++) {
+                    submittedTiles[index] = null;
+                }
+
+                for(OnRailLockListener listener : railLockListeners) {
+                    listener.unlock();
+                }
+                sectionState = SectionState.DEFAULT;
+            } else {
+                sectionState = SectionState.RETURNING;
+            }
+        }
+    }
+
     public interface OnRailLockListener {
         void lock();
         void unlock();
@@ -156,7 +260,7 @@ public class Submitter extends ScreenSectionController {
         void onWordScored(int score);
     }
 
-    private enum State {
+    private enum SectionState {
         DEFAULT, SUBMITTING, RETURNING
     }
 }
