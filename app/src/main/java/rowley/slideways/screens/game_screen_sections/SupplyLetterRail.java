@@ -115,7 +115,6 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
                     //If the incoming tile is right between two cells, it won't find a home and the target
                     //index will be -1. So we need to do another check here
                     if(targetIndex != -1) {
-                        Log.d("JAR", "Gonna take a new tile");
                         pushTileBackIntoOnDeck(letterTiles[letterTiles.length - 1]);
                         requestTilesShiftRight(targetIndex, letterTiles.length - 1);
                         tile.setLastStablePosition(letterTiles[targetIndex + 1].getDesiredLeft() - tile.getWidth() - Assets.padding,
@@ -201,7 +200,6 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
      */
     private void requestTilesShiftRight(int fromIndex, int toIndex) {
         for(int i = toIndex; i > fromIndex; i--) {
-            Log.d("JAR", "Shifting: " + i);
             letterTiles[i] = letterTiles[i - 1];
             letterTiles[i].setDesiredPosition(letterTiles[i].getLeft() + letterTiles[i].getWidth() + Assets.padding, letterTiles[i].getTop());
             letterTiles[i - 1] = null;
@@ -236,12 +234,10 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
                     || (movingTile.getLeft() + movingTile.getWidth() < letterTiles[i].getLeft() + letterTiles[i].getWidth()
                     && movingTile.getLeft() + movingTile.getWidth() > letterTiles[i].getLeft() + (letterTiles[i].getWidth() / 2))) {
                 targetIndex = i;
-                Log.d("JAR", "Set to " + i);
                 break;
             }
         }
 
-        Log.d("JAR", "Returning " + targetIndex);
         return targetIndex;
     }
 

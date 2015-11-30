@@ -1,6 +1,7 @@
 package rowley.slideways.screens;
 
 import android.graphics.Color;
+import android.util.Log;
 
 import java.util.List;
 

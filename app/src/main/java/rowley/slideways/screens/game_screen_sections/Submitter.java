@@ -15,6 +15,7 @@ import jrowley.gamecontrollib.screen_control.ScreenSectionController;
 import rowley.slideways.R;
 import rowley.slideways.data.entity.LetterTile;
 import rowley.slideways.data.entity.MovableEntity;
+import rowley.slideways.data.entity.WordScore;
 import rowley.slideways.screens.GameScreen;
 import rowley.slideways.screens.HighScoresScreen;
 import rowley.slideways.util.Assets;
@@ -101,7 +102,7 @@ public class Submitter extends ScreenSectionController {
                             if(tile != null) {
                                 tile.setLastStablePosition(tile.getLeft(), tile.getTop());
                                 tile.setDesiredPosition(desiredTileLeft, 0);
-                                tile.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * .65));
+                                tile.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * 0.65f));
                             }
                         }
                         sectionState = SectionState.SUBMITTING;
@@ -235,7 +236,11 @@ public class Submitter extends ScreenSectionController {
                 score = Assets.wordScorer.getScoreForWord(wordToSubmit);
             }
             if(score > 0) {
-                // TODO: 11/29/15
+                WordScore wordScore = new WordScore();
+                wordScore.setLeft(sectionCenter);
+                wordScore.setTop(0);
+                wordScore.setScore(score);
+                wordScoredListener.onWordScored(wordScore);
                 for(index = 0; index < submittedTiles.length; index++) {
                     submittedTiles[index] = null;
                 }
@@ -253,7 +258,7 @@ public class Submitter extends ScreenSectionController {
     private void returnTiles() {
         for(MovableEntity tile : submittedTiles) {
             if(tile != null) {
-                tile.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * .4));
+                tile.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * 0.4f));
             }
         }
         sectionState = SectionState.RETURNING;
@@ -277,7 +282,7 @@ public class Submitter extends ScreenSectionController {
     }
 
     public interface OnWordScoredListener {
-        void onWordScored(int score);
+        void onWordScored(WordScore score);
     }
 
     private enum SectionState {

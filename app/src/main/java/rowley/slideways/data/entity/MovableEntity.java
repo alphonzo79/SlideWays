@@ -1,5 +1,7 @@
 package rowley.slideways.data.entity;
 
+import android.util.Log;
+
 /**
  * Created by joe on 11/26/15.
  */

@@ -1,28 +1,70 @@
 package rowley.slideways.screens.game_screen_sections;
 
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.util.Log;
+
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Locale;
 
 import jrowley.gamecontrollib.game_control.GameController;
 import jrowley.gamecontrollib.input.TouchEvent;
 import jrowley.gamecontrollib.screen_control.ScreenSectionController;
+import rowley.slideways.data.entity.MovableEntity;
+import rowley.slideways.data.entity.WordScore;
+import rowley.slideways.util.Assets;
 
 /**
  * Created by joe on 11/27/15.
  */
 public class Score extends ScreenSectionController implements Submitter.OnWordScoredListener {
+    private int score = 0;
+    private Rect scoreBounds;
+    private final Typeface TYPEFACE = Typeface.DEFAULT_BOLD;
+    private final Paint.Align ALIGNMENT = Paint.Align.RIGHT;
+    private int textSize;
+    private final float TEXT_SIZE_TO_SECTION_HEIGHT_RATIO = 0.35f;
+    private final int textRight;
+    private int textLeft;
+    private final int textBaseline;
+    private final int textBaselineOffsetFromTop;
+
+    private WordScore wordScore;
+
     public Score(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
+
+        textSize = (int) (sectionHeight * TEXT_SIZE_TO_SECTION_HEIGHT_RATIO);
+
+        scoreBounds = new Rect();
+
+        textRight = sectionLeft + sectionWidth - Assets.padding;
+        gameController.getGraphics().getTextBounds(String.valueOf(score), textSize, TYPEFACE, ALIGNMENT, scoreBounds);
+        textBaselineOffsetFromTop = scoreBounds.height();
+        textBaseline = sectionTop + Assets.padding + textBaselineOffsetFromTop;
+        textLeft = textRight - scoreBounds.width();
     }
 
     @Override
-    public void update(float v, List<TouchEvent> list) {
-        // TODO: 11/27/15
+    public void update(float portionOfSecond, List<TouchEvent> list) {
+        if(wordScore != null && wordScore.progressTowardDesiredPosition(portionOfSecond)) {
+            score += wordScore.getScore();
+            scoreBounds.setEmpty();
+            gameController.getGraphics().getTextBounds(String.valueOf(score), textSize, TYPEFACE, ALIGNMENT, scoreBounds);
+            textLeft = textRight - scoreBounds.width();
+            wordScore = null;
+        }
     }
 
     @Override
     public void present(float v) {
-        // TODO: 11/27/15
-        gameController.getGraphics().drawRect(sectionLeft, sectionTop, sectionWidth, sectionHeight, 0xff0000ff);
+        gameController.getGraphics().writeText(String.valueOf(score), textRight, textBaseline, Color.WHITE, textSize, TYPEFACE, ALIGNMENT);
+        if(wordScore != null) {
+            gameController.getGraphics().writeText(String.format(Locale.getDefault(), "+%d", wordScore.getScore()), wordScore.getLeft(), wordScore.getTop() + textBaselineOffsetFromTop, Color.WHITE, textSize, TYPEFACE, Paint.Align.LEFT);
+        }
     }
 
     @Override
@@ -41,7 +83,13 @@ public class Score extends ScreenSectionController implements Submitter.OnWordSc
     }
 
     @Override
-    public void onWordScored(int score) {
-        // TODO: 11/29/15  
+    public void onWordScored(WordScore score) {
+        scoreBounds.setEmpty();
+        gameController.getGraphics().getTextBounds(String.format(Locale.getDefault(), "+%d", score.getScore()), textSize, TYPEFACE, Paint.Align.RIGHT, scoreBounds);
+        score.setWidth(scoreBounds.width());
+        score.setHeight(scoreBounds.height());
+        score.setDesiredPosition(textLeft - scoreBounds.width(), textBaseline - textBaselineOffsetFromTop);
+        score.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * 0.7f));
+        wordScore = score;
     }
 }
