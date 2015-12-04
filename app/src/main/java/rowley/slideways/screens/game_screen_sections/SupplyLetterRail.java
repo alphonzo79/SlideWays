@@ -181,14 +181,17 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
                 letter.setDesiredPosition(letter.getLastStableLeft(), letter.getLastStableTop());
             }
 
-            letterTiles[targetIndex] = letter;
-            tilesToAdjust[targetIndex] = true;
-            railState = RailState.ADJUSTING;
-            targetRailStateAfterAdjustment = RailState.RESTING;
-            selectedLetterIndex = -1;
+            if(targetIndex >= 0) {
+                letterTiles[targetIndex] = letter;
+                tilesToAdjust[targetIndex] = true;
+                railState = RailState.ADJUSTING;
+                targetRailStateAfterAdjustment = RailState.RESTING;
+                selectedLetterIndex = -1;
+            }
 
             return true;
         }
+
         return false;
     }
 

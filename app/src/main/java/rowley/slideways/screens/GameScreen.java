@@ -20,7 +20,7 @@ import rowley.slideways.util.MovingLetterTileAttributes;
 /**
  * Created by jrowley on 11/4/15.
  */
-public class GameScreen extends ScreenController implements LetterReceiver {
+public class GameScreen extends ScreenController implements LetterReceiver, Timer.OnTimeExpiredListener {
     private boolean hasBackBeenPressed = false;
     private int screenWidth;
     private int centerHoriz;
@@ -68,9 +68,11 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         submitter = new Submitter(submitterLeft, 0, submitterWidth, builderRailTop, gameController);
 
         timer = new Timer(0, 0, submitterLeft, builderRailTop, gameController);
+        timer.setOnTimeExpiredListener(this);
 
         int scoreLeft = submitterLeft + submitterWidth;
         score = new Score(scoreLeft, 0, submitterLeft, builderRailTop, gameController);
+        score.setOnSoreRecordedListener(timer);
 
         submitter.addRailLockListener(supplyLetterRail);
         submitter.addRailLockListener(builderRail);
@@ -190,5 +192,10 @@ public class GameScreen extends ScreenController implements LetterReceiver {
         lastY = lastTouchY;
 
         return true;
+    }
+
+    @Override
+    public void onTimeExpired() {
+        // TODO: 12/3/15
     }
 }

@@ -61,6 +61,10 @@ public class Submitter extends ScreenSectionController {
 
     private SectionState sectionState = SectionState.DEFAULT;
 
+    private String highestScoringWord = "";
+    private int highestScore = 0;
+    private String longestWord = "";
+
     public Submitter(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
 
@@ -236,14 +240,7 @@ public class Submitter extends ScreenSectionController {
                 score = Assets.wordScorer.getScoreForWord(wordToSubmit);
             }
             if(score > 0) {
-                WordScore wordScore = new WordScore();
-                wordScore.setLeft(sectionCenter);
-                wordScore.setTop(0);
-                wordScore.setScore(score);
-                wordScoredListener.onWordScored(wordScore);
-                for(index = 0; index < submittedTiles.length; index++) {
-                    submittedTiles[index] = null;
-                }
+                handleWordScore(score, wordToSubmit);
 
                 for(OnRailLockListener listener : railLockListeners) {
                     listener.unlock();
@@ -269,6 +266,25 @@ public class Submitter extends ScreenSectionController {
             if(tile != null) {
                 tile.overrideProgressPixelsPerSecondToHeightRatio(MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO);
             }
+        }
+    }
+
+    private void handleWordScore(int score, char[] word) {
+        WordScore wordScore = new WordScore();
+        wordScore.setLeft(sectionCenter);
+        wordScore.setTop(0);
+        wordScore.setScore(score);
+        wordScoredListener.onWordScored(wordScore);
+        for(int index = 0; index < submittedTiles.length; index++) {
+            submittedTiles[index] = null;
+        }
+
+        if(word.length > longestWord.length()) {
+            longestWord = String.valueOf(word);
+        }
+        if(score > highestScore) {
+            highestScore = score;
+            highestScoringWord = String.valueOf(word);
         }
     }
 

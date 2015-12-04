@@ -33,6 +33,9 @@ public class Score extends ScreenSectionController implements Submitter.OnWordSc
     private final int textBaselineOffsetFromTop;
 
     private WordScore wordScore;
+    private boolean incomingScore = false;
+
+    private OnScoreRecordedListener scoreRecordedListener;
 
     public Score(int sectionLeft, int sectionTop, int sectionWidth, int sectionHeight, GameController gameController) {
         super(sectionLeft, sectionTop, sectionWidth, sectionHeight, gameController);
@@ -50,20 +53,21 @@ public class Score extends ScreenSectionController implements Submitter.OnWordSc
 
     @Override
     public void update(float portionOfSecond, List<TouchEvent> list) {
-        if(wordScore != null && wordScore.progressTowardDesiredPosition(portionOfSecond)) {
+        if(incomingScore && wordScore.progressTowardDesiredPosition(portionOfSecond)) {
             score += wordScore.getScore();
             scoreBounds.setEmpty();
             gameController.getGraphics().getTextBounds(String.valueOf(score), textSize, TYPEFACE, ALIGNMENT, scoreBounds);
             textLeft = textRight - scoreBounds.width();
-            wordScore = null;
+            incomingScore = false;
+            scoreRecordedListener.onScoreRecorded(wordScore);
         }
     }
 
     @Override
     public void present(float v) {
         gameController.getGraphics().writeText(String.valueOf(score), textRight, textBaseline, Color.WHITE, textSize, TYPEFACE, ALIGNMENT);
-        if(wordScore != null) {
-            gameController.getGraphics().writeText(String.format(Locale.getDefault(), "+%d", wordScore.getScore()), wordScore.getLeft(), wordScore.getTop() + textBaselineOffsetFromTop, Color.WHITE, textSize, TYPEFACE, Paint.Align.LEFT);
+        if(incomingScore) {
+            gameController.getGraphics().writeText(wordScore.getScoreString(), wordScore.getLeft(), wordScore.getTop() + textBaselineOffsetFromTop, Color.WHITE, textSize, TYPEFACE, Paint.Align.LEFT);
         }
     }
 
@@ -84,12 +88,22 @@ public class Score extends ScreenSectionController implements Submitter.OnWordSc
 
     @Override
     public void onWordScored(WordScore score) {
+        score.setScoreString(String.format(Locale.getDefault(), "+%d", score.getScore()));
         scoreBounds.setEmpty();
-        gameController.getGraphics().getTextBounds(String.format(Locale.getDefault(), "+%d", score.getScore()), textSize, TYPEFACE, Paint.Align.RIGHT, scoreBounds);
+        gameController.getGraphics().getTextBounds(score.getScoreString(), textSize, TYPEFACE, Paint.Align.RIGHT, scoreBounds);
         score.setWidth(scoreBounds.width());
         score.setHeight(scoreBounds.height());
         score.setDesiredPosition(textLeft - scoreBounds.width(), textBaseline - textBaselineOffsetFromTop);
-        score.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * 0.7f));
+        score.overrideProgressPixelsPerSecondToHeightRatio((int) (MovableEntity.PROGRESS_PIXELS_PER_SECOND_TO_HEIGHT_RATIO * 0.8f));
         wordScore = score;
+        incomingScore = true;
+    }
+
+    public void setOnSoreRecordedListener(OnScoreRecordedListener listener) {
+        this.scoreRecordedListener = listener;
+    }
+
+    public interface OnScoreRecordedListener {
+        public void onScoreRecorded(WordScore wordScore);
     }
 }
