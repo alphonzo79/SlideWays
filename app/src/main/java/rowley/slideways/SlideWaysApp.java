@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 import dagger.Component;
 import rowley.slideways.activity.TestActivity;
 import rowley.slideways.di.SlideWaysInjectionModule;
+import rowley.slideways.screens.GameOverScreen;
 import rowley.slideways.screens.LoadingScreen;
 
 /**
@@ -18,6 +19,7 @@ public class SlideWaysApp extends Application {
     public interface ApplicationComponent {
         void inject(LoadingScreen loadingScreen);
         void inject(TestActivity testActivity);
+        void inject(GameOverScreen gameOverScreen);
     }
 
     private ApplicationComponent applicationComponent;

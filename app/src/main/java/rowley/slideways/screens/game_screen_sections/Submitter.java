@@ -288,6 +288,18 @@ public class Submitter extends ScreenSectionController {
         }
     }
 
+    public String getHighestScoringWord() {
+        return highestScoringWord;
+    }
+
+    public int getHighestScore() {
+        return highestScore;
+    }
+
+    public String getLongestWord() {
+        return longestWord;
+    }
+
     public interface OnRailLockListener {
         void lock();
         void unlock();

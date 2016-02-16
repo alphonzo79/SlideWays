@@ -196,6 +196,6 @@ public class GameScreen extends ScreenController implements LetterReceiver, Time
 
     @Override
     public void onTimeExpired() {
-        // TODO: 12/3/15
+        gameController.setScreen(new GameOverScreen(score.getScore(), submitter.getLongestWord(), submitter.getHighestScore(), submitter.getHighestScoringWord(), gameController));
     }
 }

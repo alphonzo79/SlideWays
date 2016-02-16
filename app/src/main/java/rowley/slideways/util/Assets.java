@@ -8,7 +8,8 @@ import rowley.wordtrie.WordTrie;
  */
 public class Assets {
     public static final int MAX_WORD_LENGTH = 15;
-    public static final int LETTERS_PER_SCREEN = 7;
+    public static final int MOVING_LETTERS_PER_SCREEN = 7;
+    public static final int DISPLAY_LETTERS_PER_SCREEN = 15;
     public static WordTrie wordTrie;
     public static final int MAX_BEST_GAMES = 12;
     public static BestGameList bestGameList;

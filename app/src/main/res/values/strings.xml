@@ -8,4 +8,8 @@
     <string name="supply_rail">Supply Rail</string>
     <string name="builder_rail">Builder Rail</string>
     <string name="submit">Submit</string>
+
+    <string name="game_over_label">Game Over!</string>
+    <string name="longest_word_label">Longest Word:</string>
+    <string name="highest_scoring_word_label_formatted">Highest-Scoring Word (%1$d):</string>
 </resources>

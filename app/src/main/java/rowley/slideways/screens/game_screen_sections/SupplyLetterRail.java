@@ -169,27 +169,27 @@ public class SupplyLetterRail extends SlidingLetterRailBase {
             //We're inside the vertical bounds of our letters, let's figure out where it needs to go
             int targetIndex = findTargetIndexForMovingTile(letter);
 
-            if(targetIndex < selectedLetterIndex) {
-                requestTilesShiftRight(targetIndex, selectedLetterIndex);
-                letter.setDesiredPosition(letterTiles[targetIndex + 1].getDesiredLeft() - letter.getWidth() - Assets.padding,
-                        letterTiles[targetIndex + 1].getDesiredTop());
-            } else if(targetIndex > selectedLetterIndex) {
-                requestTilesShiftLeft(selectedLetterIndex, targetIndex);
-                letter.setDesiredPosition(letterTiles[targetIndex - 1].getDesiredLeft() + letter.getWidth() + Assets.padding,
-                        letterTiles[targetIndex - 1].getDesiredTop());
-            } else {
-                letter.setDesiredPosition(letter.getLastStableLeft(), letter.getLastStableTop());
-            }
-
             if(targetIndex >= 0) {
+                if (targetIndex < selectedLetterIndex) {
+                    requestTilesShiftRight(targetIndex, selectedLetterIndex);
+                    letter.setDesiredPosition(letterTiles[targetIndex + 1].getDesiredLeft() - letter.getWidth() - Assets.padding,
+                            letterTiles[targetIndex + 1].getDesiredTop());
+                } else if (targetIndex > selectedLetterIndex) {
+                    requestTilesShiftLeft(selectedLetterIndex, targetIndex);
+                    letter.setDesiredPosition(letterTiles[targetIndex - 1].getDesiredLeft() + letter.getWidth() + Assets.padding,
+                            letterTiles[targetIndex - 1].getDesiredTop());
+                } else {
+                    letter.setDesiredPosition(letter.getLastStableLeft(), letter.getLastStableTop());
+                }
+
                 letterTiles[targetIndex] = letter;
                 tilesToAdjust[targetIndex] = true;
                 railState = RailState.ADJUSTING;
                 targetRailStateAfterAdjustment = RailState.RESTING;
                 selectedLetterIndex = -1;
-            }
 
-            return true;
+                return true;
+            }
         }
 
         return false;

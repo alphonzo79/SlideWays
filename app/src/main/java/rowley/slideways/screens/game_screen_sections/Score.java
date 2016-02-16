@@ -99,6 +99,10 @@ public class Score extends ScreenSectionController implements Submitter.OnWordSc
         incomingScore = true;
     }
 
+    public int getScore() {
+        return score;
+    }
+
     public void setOnSoreRecordedListener(OnScoreRecordedListener listener) {
         this.scoreRecordedListener = listener;
     }
